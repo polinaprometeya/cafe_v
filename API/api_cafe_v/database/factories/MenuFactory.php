@@ -18,7 +18,9 @@ class MenuFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name'=> fake()->sentence(4,true),
+            'description'=>fake()->paragraph(5,true),
+            'price'=>fake()->numberBetween(50,250),
         ];
     }
 }

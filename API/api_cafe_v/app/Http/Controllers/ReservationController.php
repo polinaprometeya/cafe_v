@@ -13,7 +13,13 @@ class ReservationController extends Controller
         */
     public function index()
     {
-        //
+
+
+        $attendees = AttendeeResource::collection(
+            $query->paginate()
+        );
+
+        return $attendees;
     }
 
     /**

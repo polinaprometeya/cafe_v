@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
+use App\Models\Menu;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\MenuResource;
+
 
 class MenuController extends Controller
 {
@@ -13,7 +16,11 @@ class MenuController extends Controller
         */
     public function index()
     {
-        //
+        $menu = MenuResource::collection(
+            Menu::query()->latest()->get()
+        );
+
+        return $menu;
     }
 
     /**
@@ -42,9 +49,9 @@ class MenuController extends Controller
         * @param  int  $id
         * @return Response
         */
-    public function show($id)
+    public function show(Menu $menu)
     {
-        //
+        return new MenuResource($menu);
     }
 
     /**

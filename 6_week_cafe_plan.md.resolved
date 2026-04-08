@@ -1,0 +1,236 @@
+# ☕ 6-Week Café Digital Solution — Learning Plan
+
+**Stack:** Laravel REST API · MySQL · React (SPA) · React Native Expo  
+**Project:** A complete digital solution for a fictional café (menu, orders, bookings, users)
+
+---
+
+## Overview
+
+```mermaid
+graph LR
+  W1["Week 1\nMySQL + ORM"] --> W2["Week 2\nLaravel API"]
+  W2 --> W3["Week 3\nAPI Hardening\n+ Security"]
+  W3 --> W4["Week 4\nReact SPA"]
+  W4 --> W5["Week 5\nReact Native App"]
+  W5 --> W6["Week 6\nTesting + Polish"]
+```
+
+---
+
+## Week 1 — Database Design & ORM
+**Subject:** Databaseprogrammering (16474)
+
+### Goals
+- Design a domain model with **≥ 20 entities** for the café
+- Set up MySQL with migrations and seed data
+- Use **Eloquent ORM** (Laravel's ORM) for queries and manipulations
+- Set up a **MongoDB** document database alongside MySQL and compare the two
+
+### Entity Examples (≥ 20)
+`User`, `Role`, `Customer`, `Staff`, `Table`, `Reservation`, `Order`, `OrderItem`,  
+`Product`, `Category`, `Ingredient`, `ProductIngredient`, `Recipe`, `Supplier`,  
+`Purchase`, `Invoice`, `Payment`, `PaymentMethod`, `Review`, `Promotion`, `PromotionProduct`
+
+### Tasks
+- [ ] Create ERD and define all relationships, constraints (FK, unique, not null)
+- [ ] Write Laravel migrations for all 20+ entities
+- [ ] Seed the database with realistic fake data (Factories + Faker)
+- [ ] Write Eloquent queries: eager loading, scopes, aggregations
+- [ ] Set up MongoDB collection (e.g. `activity_logs`, `product_reviews`)
+- [ ] **Performance comparison:** run benchmark queries on MySQL vs MongoDB for equivalent data, document results in a table
+
+### Deliverable
+- ERD diagram
+- Migration files + seeders
+- ORM query examples (CRUD, joins, aggregations)
+- MongoDB vs MySQL comparison doc with performance measurements
+
+---
+
+## Week 2 — Laravel REST API (Core)
+**Subject:** Serversideprogrammering (16477)
+
+### Goals
+- Build a full **CRUD REST API** in Laravel for the café
+- Apply **Repository Pattern**, **IoC** and **Dependency Injection**
+- Structure with clean separation of concerns (Controllers → Services → Repositories)
+
+### Tasks
+- [ ] Set up Laravel project, configure MySQL connection
+- [ ] Generate resource controllers for: `Products`, `Orders`, `Reservations`, `Users`
+- [ ] Implement **Repository interfaces** and bind them via **Service Provider** (IoC container)
+- [ ] Add **Eloquent resources** (API transformers) for clean JSON output
+- [ ] Implement **authentication** with Laravel Sanctum (token-based)
+- [ ] Add **async/background processing** with jobs (e.g. send confirmation email on order)
+
+### API Endpoints (examples)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | List all menu items |
+| POST | `/api/orders` | Place an order |
+| GET | `/api/reservations` | List reservations |
+| POST | `/api/auth/login` | Login → return token |
+| DELETE | `/api/orders/{id}` | Cancel order |
+
+### Deliverable
+- Working REST API with full CRUD
+- Repository pattern with DI wiring
+- Sanctum auth (register/login/logout)
+
+---
+
+## Week 3 — Security & API Hardening
+**Subject:** Softwaretest og -sikkerhed (16484)
+
+### Goals
+- Secure the API against common attacks
+- Implement authentication, hashing, SSL awareness
+- Begin security testing
+
+### Tasks
+- [ ] **Password hashing** with bcrypt (Laravel's `Hash::make()`) — document MD5 vs bcrypt comparison
+- [ ] **Input validation** on all endpoints to prevent **SQL injection** (use Eloquent, never raw input in queries)
+- [ ] Add **XSS protection** headers via middleware
+- [ ] Configure **HTTPS / SSL** awareness (document how to enable in production)
+- [ ] **Role-based authorization** (admin vs customer) using Laravel Gates/Policies
+- [ ] Rate limiting on sensitive endpoints (login, order placement)
+- [ ] Use **OWASP** checklist — document top 5 risks and mitigations for the café API
+- [ ] Run initial security scan with a tool (e.g. **OWASP ZAP** or **Burp Suite Community**)
+
+### Deliverable
+- Secured API endpoints
+- Security documentation (hashing, SSL, attack mitigations)
+- OWASP ZAP scan report
+
+---
+
+## Week 4 — React SPA (Client-Side)
+**Subject:** Clientsideprogrammering (16476)
+
+### Goals
+- Build a **Single Page Application** in React that consumes the Laravel API
+- Full CRUD through the UI, user login/logout
+
+### Tasks
+- [ ] Bootstrap React app (Vite + React + TypeScript)
+- [ ] Implement **React Router** for SPA navigation
+- [ ] Create pages: `Menu`, `Order`, `Reservations`, `Admin Dashboard`, `Login`
+- [ ] Connect to Laravel API using **Axios** (handle tokens via interceptors)
+- [ ] State management with **React Context** or **Zustand**
+- [ ] Admin panel: manage products, view orders, manage reservations (full CRUD)
+- [ ] Handle auth flow: login → store token → protected routes
+
+### Key Components
+
+| Component | Description |
+|-----------|-------------|
+| `MenuPage` | Browse products by category |
+| `OrderForm` | Add items, submit order via API |
+| `ReservationForm` | Book a table |
+| `AdminDashboard` | View + manage all data |
+| `AuthContext` | Token management across app |
+
+### Deliverable
+- Deployed React SPA (or running locally)
+- Full CRUD via API demonstrated in UI
+- Protected routes and auth flow
+
+---
+
+## Week 5 — React Native Expo App
+**Subject:** App 2 (IT-kravsspecifikation 6239)
+
+### Goals
+- Build a **React Native Expo** app for café customers
+- Send and receive data from the Laravel API
+- Reuse logic/types from the React frontend where possible
+
+### Tasks
+- [ ] Initialize Expo app: `npx create-expo-app`
+- [ ] Set up **Expo Router** for navigation
+- [ ] Screens: `Welcome`, `Menu`, `Order`, `My Orders`, `Login`
+- [ ] Fetch menu from API, display items with images
+- [ ] Allow customer to place and track orders
+- [ ] Login → store Sanctum token with **SecureStore**
+- [ ] Push notification on order status update (optional stretch)
+
+### Deliverable
+- Working Expo app connecting to Laravel API
+- Demo: browse menu → place order → view order status
+
+---
+
+## Week 6 — Testing, Performance & Final Polish
+**Subject:** Softwaretest og -sikkerhed (16484)
+
+### Goals
+- Write and run a full **test suite** (unit + integration + load)
+- Produce a final test plan and release readiness assessment
+
+### Tasks
+
+#### Automated Testing
+- [ ] **PHPUnit** unit tests for service/repository classes
+- [ ] **Laravel Feature Tests** for all API endpoints (CRUD + auth)
+- [ ] **React Testing Library** for key UI components
+- [ ] **Cypress** (or Playwright) for end-to-end SPA tests — scripted test scenario
+
+#### Load / Performance Testing
+- [ ] **k6** or **Apache JMeter** load test on key API endpoints
+- [ ] Document throughput, latency, and identify bottlenecks
+- [ ] Compare performance with MongoDB vs MySQL endpoints
+
+#### Test Plan & Release Assessment
+- [ ] Write a formal **test plan** covering: functional, security, performance, UX
+- [ ] Document **UX test** findings (have someone use the app, note friction points)
+- [ ] Assess release readiness: what passes, what needs more work
+- [ ] Run final **OWASP ZAP** scan and compare with Week 3 baseline
+
+### Deliverable
+- Test suite with passing tests
+- Load test report with bottleneck analysis
+- Final test plan document
+- Release readiness report
+
+---
+
+## Subject Coverage Summary
+
+| Week | Subject | Coverage |
+|------|---------|----------|
+| 1 | Databaseprogrammering (16474) | ORM, 20+ entities, MongoDB comparison |
+| 2 | Serversideprogrammering (16477) | Web API, CRUD, IoC/DI, Repositories |
+| 3 | Softwaretest og -sikkerhed (16484) | Auth, hashing, XSS, SQL injection, OWASP |
+| 4 | Clientsideprogrammering (16476) | React SPA, API integration, auth flow |
+| 5 | IT-kravsspecifikation (6239) | React Native app, API to UI |
+| 6 | Softwaretest og -sikkerhed (16484) | Unit/E2E/load tests, test plan, UX |
+
+---
+
+## Project Structure (Mono-repo)
+
+```
+cafe-digital/
+├── backend/          # Laravel REST API
+│   ├── app/
+│   │   ├── Http/Controllers/
+│   │   ├── Repositories/       # Repository pattern
+│   │   ├── Services/
+│   │   └── Models/
+│   ├── database/migrations/
+│   └── tests/
+├── frontend/         # React SPA (Vite)
+│   └── src/
+│       ├── pages/
+│       ├── components/
+│       └── api/
+└── mobile/           # React Native Expo
+    └── app/
+        └── (screens)/
+```
+
+---
+
+> **Tip:** Start coding the backend API in Week 2 before the frontend in Week 4 — this way the React SPA and Expo app always have real data to consume, making integration straightforward.
