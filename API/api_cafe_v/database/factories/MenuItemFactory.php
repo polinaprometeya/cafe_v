@@ -19,7 +19,7 @@ class MenuItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'=> fake()->sentence(4, true),
+            'name'=> fake()->sentence(2, true),
             'description'=> fake()->paragraph(5, true),
             'price'=> fake()->numberBetween(50, 250),
             'category_id' => Category::query()->inRandomOrder()->value('id'),

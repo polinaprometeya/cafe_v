@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuResource;
 
@@ -17,9 +17,11 @@ class MenuController extends Controller
     public function index()
     {
         $menu = MenuResource::collection(
-            Menu::query()->latest()->get()
+            MenuItem::query()->latest()->get()
         );
 
+     //this returns sorted data from the database, with latest first. get() returns a collection of menu items. 
+     //collection() is a helper function that converts the collection to a resource collection.
         return $menu;
     }
 
@@ -30,7 +32,15 @@ class MenuController extends Controller
         */
     public function create()
     {
-        //
+        //first or create is a helper function that check if it exists first
+        $user = User::firstOrCreate(
+            ['id' => '51'],
+            [
+                'name' => 'Fish and Chips',
+                'price' => 150,
+                'category_id' => Category::query()->inRandomOrder()->value('id'),
+            ]
+        );
     }
 
     /**
@@ -49,9 +59,9 @@ class MenuController extends Controller
         * @param  int  $id
         * @return Response
         */
-    public function show(Menu $menu)
+    public function show(MenuItem $menuItem)
     {
-        return new MenuResource($menu);
+        return new MenuResource($menuItem);
     }
 
     /**
@@ -62,7 +72,16 @@ class MenuController extends Controller
         */
     public function edit($id)
     {
-        //
+        $menuItem = MenuItem::findOrFail($id);
+
+        $menuItem->fill([
+            'name' => 'New Name',
+            'price' => 'New Price',
+            'category_id' => 'Dropdown category id',
+        ]);
+        $menuItem->save();
+
+        return new MenuResource($menuItem);
     }
 
     /**

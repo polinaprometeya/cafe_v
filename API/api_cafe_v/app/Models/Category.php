@@ -18,6 +18,7 @@ class Category extends Model
     ];
 
     //cast the type to the CategoryType enum
+    //cast converts database values into PHP types
     protected $casts = [
         'type' => CategoryType::class,
     ];
