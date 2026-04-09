@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Menu;
+use App\Enums\CategoryType;
+use App\Models\Category;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-
 
 class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-            DB::table('users')->insert([
-            'category' => fake()->randomElement(Menu::$category),
-        ]);
+        foreach (CategoryType::cases() as $type) {
+            Category::firstOrCreate(['type' => $type]);
+        }
     }
 }
+

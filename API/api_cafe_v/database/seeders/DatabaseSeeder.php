@@ -20,8 +20,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        //you have to seed the categories first, then the menu items
+
         $this->call([
-            MenuSeeder::class,
+            CategorySeeder::class,
+            MenuItemSeeder::class,
         ]);
     }
 }

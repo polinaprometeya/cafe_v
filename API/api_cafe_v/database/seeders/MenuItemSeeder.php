@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\Menu;
+use App\Models\MenuItem;
 use Illuminate\Database\Seeder;
 
-class MenuSeeder extends Seeder
+class MenuItemSeeder extends Seeder
 {
     public function run(): void
     {
-        Menu::factory(50)->create();
+        MenuItem::factory(50)->create();
     }
 }
