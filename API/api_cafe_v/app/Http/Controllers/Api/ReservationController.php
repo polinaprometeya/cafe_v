@@ -15,11 +15,6 @@ class ReservationController extends Controller
     {
 
 
-        $attendees = AttendeeResource::collection(
-            $query->paginate()
-        );
-
-        return $attendees;
     }
 
     /**
