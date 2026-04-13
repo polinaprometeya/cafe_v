@@ -1,0 +1,5 @@
+$kind: http-request
+name: get all
+url: ""
+method: GET
+order: 1776061628863

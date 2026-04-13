@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\CategoryType;
 use App\Models\Category;
 use App\Models\MenuItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,7 +23,9 @@ class MenuItemFactory extends Factory
             'name'=> fake()->sentence(2, true),
             'description'=> fake()->paragraph(5, true),
             'price'=> fake()->numberBetween(50, 250),
-            'category_id' => Category::query()->inRandomOrder()->value('id'),
+            'category_id' => Category::firstOrCreate([
+                'type' => fake()->randomElement(CategoryType::cases()),
+            ])->id,
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\CategoryType;
+use App\Models\Category;
 use App\Models\MenuItem;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuResource;
@@ -33,12 +35,14 @@ class MenuController extends Controller
     public function create()
     {
         //first or create is a helper function that check if it exists first
-        $user = User::firstOrCreate(
+        $user = MenuItem::firstOrCreate(
             ['id' => '51'],
             [
                 'name' => 'Fish and Chips',
                 'price' => 150,
-                'category_id' => Category::query()->inRandomOrder()->value('id'),
+                'category_id' => Category::firstOrCreate([
+                    'type' => CategoryType::Food,
+                ])->id,
             ]
         );
     }
