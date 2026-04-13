@@ -35,7 +35,7 @@ class MenuController extends Controller
     public function create()
     {
         //first or create is a helper function that check if it exists first
-        $user = MenuItem::firstOrCreate(
+        $menu = MenuItem::firstOrCreate(
             ['id' => '51'],
             [
                 'name' => 'Fish and Chips',
