@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CategoryResource;
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use App\Http\Controllers\MenuItem;
-use App\Http\Traits\CanLoadRelationships;
 
 class CategoryController extends Controller
 {
@@ -13,7 +14,7 @@ class CategoryController extends Controller
 
     protected function relations(): array
     {
-        return ['menu'];
+        return ['menuItems'];
     }
 
     /**

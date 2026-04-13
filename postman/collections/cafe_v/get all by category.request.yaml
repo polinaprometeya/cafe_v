@@ -1,5 +1,5 @@
 $kind: http-request
-name: get all
+name: get all by category
 url: ""
 method: GET
 order: 1776061628863

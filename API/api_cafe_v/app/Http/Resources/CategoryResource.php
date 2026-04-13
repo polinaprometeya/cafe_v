@@ -22,7 +22,7 @@ class CategoryResource extends JsonResource
         'number' => $this->number,
         'type' => $this->type,
         'menu' => MenuResource::collection(
-            $this->whenLoaded('menu')
+            $this->whenLoaded('menuItems')
         )
         ];
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\CategoryType;
+use App\Support\CategoryTypes;
 use App\Models\Category;
 use App\Models\MenuItem;
 use App\Http\Controllers\Controller;
@@ -41,7 +41,7 @@ class MenuController extends Controller
                 'name' => 'Fish and Chips',
                 'price' => 150,
                 'category_id' => Category::firstOrCreate([
-                    'type' => CategoryType::Food,
+                    'type' => CategoryTypes::FOOD,
                 ])->id,
             ]
         );
