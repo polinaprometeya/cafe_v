@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 //Route::post('/login', [AuthController::class, 'login']);
 //Route::post('logout', [AuthController::class, 'logout'])
 //->middleware('auth:sanctum');
+
+Route::apiResource('category', CategoryController::class);
 
 Route::apiResource('menu', MenuController::class);
 

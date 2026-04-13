@@ -17,6 +17,14 @@ class Category extends Model
         'type',
     ];
 
+    public static array $categoryType = [
+        ['id' => 1, 'type' => 'Drink'],
+        ['id' => 2, 'type' => 'Food'],
+        ['id' => 3, 'type' => 'Starter'],
+        ['id' => 4, 'type' => 'Dessert'],
+    ];
+ 
+
     //cast the type to the CategoryType enum
     //cast converts database values into PHP types
     protected $casts = [
