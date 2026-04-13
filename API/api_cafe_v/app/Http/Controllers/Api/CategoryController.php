@@ -4,15 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Http\Controllers\MenuItem;
+use App\Http\Traits\CanLoadRelationships;
 
 class CategoryController extends Controller
 {
+    use CanLoadRelationships;
+
+    protected function relations(): array
+    {
+        return ['menu'];
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+
+        $query = $this->loadRelationships(Category::query());
+
+        $categories = CategoryResource::collection(
+            $query->latest()->paginate()
+        );
+
+        return $categories;
     }
 
     /**
