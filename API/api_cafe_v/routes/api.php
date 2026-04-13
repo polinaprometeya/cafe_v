@@ -6,6 +6,11 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 
+
+Route::apiResource('category', CategoryController::class);
+
+Route::apiResource('menu', MenuController::class);
+
 //this is a current user endpoint not a specific one
 //middleware('auth:sanctum') protects the route, you need authentication Bearer token in order to access this route
 //Route::middleware('auth:sanctum')->get('/user', function(Request $request){return $request->user();}); <--- laravel 11 , this is no more
@@ -16,10 +21,6 @@ use Illuminate\Http\Request;
 //Route::post('/login', [AuthController::class, 'login']);
 //Route::post('logout', [AuthController::class, 'logout'])
 //->middleware('auth:sanctum');
-
-Route::apiResource('category', CategoryController::class);
-
-Route::apiResource('menu', MenuController::class);
 
 //Route::apiResource('events.attendees', AttendeeController::class)
 //->scoped()->except('update');
