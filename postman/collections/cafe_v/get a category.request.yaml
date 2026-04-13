@@ -1,0 +1,5 @@
+$kind: http-request
+name: get a category
+url: ""
+method: GET
+order: 2469428172213658

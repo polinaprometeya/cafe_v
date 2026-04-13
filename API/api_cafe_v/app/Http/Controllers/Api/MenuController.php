@@ -19,7 +19,7 @@ class MenuController extends Controller
     public function index()
     {
         $menu = MenuResource::collection(
-            MenuItem::query()->latest()->get()
+            MenuItem::query()->get()
         );
 
      //this returns sorted data from the database, with latest first. get() returns a collection of menu items. 
