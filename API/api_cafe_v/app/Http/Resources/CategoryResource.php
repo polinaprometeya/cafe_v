@@ -19,7 +19,6 @@ class CategoryResource extends JsonResource
         return
         [
         'id' => $this->id,
-        'number' => $this->number,
         'type' => $this->type,
         'menu' => MenuResource::collection(
             $this->whenLoaded('menuItems')
