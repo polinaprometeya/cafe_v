@@ -2,12 +2,12 @@ import api from "./api";
 
 //Read 
 
-export const getMenuByCategory = () => api.get("/category");
+export const getMenuByCategory = () => api.apiRequest("/category");
 
 //RESERVATION CRUD
 
 export const createReservation = async (reservationInfo) => {
-    return apiRequest('/Reservation/addReservation', {
+    return api.apiRequest('/Reservation/addReservation', {
         method: 'POST',
         body: reservationInfo,
     });
