@@ -16,7 +16,7 @@ function Table({ theadData = [], tbodyData = [], customClass }) {
     };
 
     return (
-        <table className={customClass}>
+        <table className={customClass ?? "cv-table"}>
             <thead>
                 <tr>
                     {theadData.map((h, idx) => (
