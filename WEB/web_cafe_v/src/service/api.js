@@ -46,6 +46,5 @@ async function apiRequest(endpoint, options = {}) {
     }
 }
 
-export default {
-    apiRequest,
-};
+const api = { apiRequest };
+export default api;

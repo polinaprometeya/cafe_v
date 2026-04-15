@@ -1,0 +1,38 @@
+.header 
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: var(--colorHeader);
+}
+
+.header .info p 
+{
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.header .links 
+{
+  display: flex;
+  gap: 1rem;
+}
+
+.header .links a 
+{
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--colorHeader);
+  background: var(--colorCatchyBtn);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.header .links a:hover 
+{
+  background: var(--colorHighlightCatchyBtn);
+}
