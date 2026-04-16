@@ -22,6 +22,10 @@ class MenuFactory extends Factory
     public function definition(): array
     {
         return [
+            'number' => (function () {
+                static $n = 0;
+                return ++$n;
+            })(),
             'name'=> fake()->sentence(4,true),
             'description'=>fake()->paragraph(5,true),
             'price'=>fake()->numberBetween(50,250),
