@@ -22,10 +22,12 @@ export default function Category() {
         });
     }, []);
 
+    const tableHeaderData = ["Number", "Name", "Description", "Price"]
+
     const tableBodyData = (categoryData = []) =>
         categoryData.map((menuItem) => ({
             id: menuItem?.id,
-            items: [menuItem?.name, menuItem?.description, menuItem?.price],
+            items: [menuItem?.number, menuItem?.name, menuItem?.description, menuItem?.price],
         }));
 
 
@@ -34,25 +36,25 @@ export default function Category() {
         <>
             <h3>Food</h3>
             <Table
-                theadData={["Name", "Description", "Price"]}
+                theadData={tableHeaderData}
                 tbodyData={tableBodyData(foodCategory)}
             />
 
             <h3>Starter</h3>
             <Table
-                theadData={["Name", "Description", "Price"]}
+                theadData={tableHeaderData}
                 tbodyData={tableBodyData(starterCategory)}
             />
 
             <h3>Dessert</h3>
             <Table
-                theadData={["Name", "Description", "Price"]}
+                theadData={tableHeaderData}
                 tbodyData={tableBodyData(dessertCategory)}
             />
 
             <h3>Drink</h3>
             <Table
-                theadData={["Name", "Description", "Price"]}
+                theadData={tableHeaderData}
                 tbodyData={tableBodyData(drinkCategory)}
             />
         </>
