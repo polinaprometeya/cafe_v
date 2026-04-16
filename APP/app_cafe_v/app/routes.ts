@@ -2,6 +2,7 @@ import api from "./_api";
 
 export type MenuItem = {
   id: number | string;
+  number?: number;
   name: string;
   description?: string;
   price?: number;

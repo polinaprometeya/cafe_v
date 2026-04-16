@@ -9,6 +9,7 @@ import { Link } from 'expo-router';
 import {
   getMenuByCategory,
   type Category,
+  type MenuItem,
   type PaginatedCategoryResponse,
 } from "../routes";
 import Table from "../components/table";
@@ -34,6 +35,27 @@ export default function HomeScreen() {
       });
   }, []);
 
+  const tableHeaderData = ["Number", "Name", "Description", "Price"]
+
+  const tableBodyData = (categoryData: MenuItem[] = []) =>
+    categoryData.map((menuItem: MenuItem) => ({
+      id: menuItem?.id,
+      items: [
+        menuItem?.number,
+        menuItem?.name,
+        menuItem?.description,
+        menuItem?.price,
+      ],
+    }));
+
+  const renderCategoryTable = (title: string, data: Category["menu"]) => (
+    <ThemedView key={title} style={{ marginBottom: 16 }}>
+      <ThemedText type="subtitle">{title}</ThemedText>
+      <Table theadData={tableHeaderData} tbodyData={tableBodyData(data)} />
+    </ThemedView>
+  );
+
+
 
   return (
     <ParallaxScrollView
@@ -52,16 +74,10 @@ export default function HomeScreen() {
       <ThemedView>
         {/* <Table style={styles.table} tableData={foodCategory} /> */}
         {/* <Table  tableData={foodCategory} /> */}
-        <Table
-            theadData={["Name", "Description", "Price"]}
-            tbodyData={foodCategory.map((m) => ({
-              id: m.id,
-              items: [m.name, m.description, m.price],
-        }))}
-          />
-        <Table  tableData={drinkCategory} />
-        <Table   tableData={starterCategory} />
-        <Table   tableData={dessertCategory} />
+        {renderCategoryTable("Food", foodCategory)}
+        {renderCategoryTable("Drink", drinkCategory)}
+        {renderCategoryTable("Starter", starterCategory)}
+        {renderCategoryTable("Dessert", dessertCategory)}
   
       </ThemedView>
 
