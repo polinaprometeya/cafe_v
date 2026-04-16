@@ -22,43 +22,38 @@ export default function Category() {
         });
     }, []);
 
+    const tableBodyData = (categoryData = []) =>
+        categoryData.map((menuItem) => ({
+            id: menuItem?.id,
+            items: [menuItem?.name, menuItem?.description, menuItem?.price],
+        }));
+
+
 
     return (
         <>
             <h3>Food</h3>
             <Table
                 theadData={["Name", "Description", "Price"]}
-                tbodyData={foodCategory.map((menuItem) => ({
-                    id: menuItem?.id,
-                    items: [menuItem?.name, menuItem?.description, menuItem?.price],
-                }))}
+                tbodyData={tableBodyData(foodCategory)}
             />
 
             <h3>Starter</h3>
             <Table
                 theadData={["Name", "Description", "Price"]}
-                tbodyData={starterCategory.map((menuItem) => ({
-                    id: menuItem?.id,
-                    items: [menuItem?.name, menuItem?.description, menuItem?.price],
-                }))}
+                tbodyData={tableBodyData(starterCategory)}
             />
 
             <h3>Dessert</h3>
             <Table
                 theadData={["Name", "Description", "Price"]}
-                tbodyData={dessertCategory.map((menuItem) => ({
-                    id: menuItem?.id,
-                    items: [menuItem?.name, menuItem?.description, menuItem?.price],
-                }))}
+                tbodyData={tableBodyData(dessertCategory)}
             />
 
             <h3>Drink</h3>
             <Table
                 theadData={["Name", "Description", "Price"]}
-                tbodyData={drinkCategory.map((menuItem) => ({
-                    id: menuItem?.id,
-                    items: [menuItem?.name, menuItem?.description, menuItem?.price],
-                }))}
+                tbodyData={tableBodyData(drinkCategory)}
             />
         </>
     );

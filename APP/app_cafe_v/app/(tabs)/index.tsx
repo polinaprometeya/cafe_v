@@ -51,7 +51,14 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView>
         {/* <Table style={styles.table} tableData={foodCategory} /> */}
-        <Table  tableData={foodCategory} />
+        {/* <Table  tableData={foodCategory} /> */}
+        <Table
+            theadData={["Name", "Description", "Price"]}
+            tbodyData={foodCategory.map((m) => ({
+              id: m.id,
+              items: [m.name, m.description, m.price],
+        }))}
+          />
         <Table  tableData={drinkCategory} />
         <Table   tableData={starterCategory} />
         <Table   tableData={dessertCategory} />
