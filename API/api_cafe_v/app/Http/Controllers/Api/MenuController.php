@@ -18,13 +18,13 @@ class MenuController extends Controller
         */
     public function index()
     {
-        $menu = MenuResource::collection(
-            MenuItem::query()->get()
-        );
+      //  $menu = MenuResource::collection(
+    //     MenuItem::query()->get()
+      //  );
 
      //this returns sorted data from the database, with latest first. get() returns a collection of menu items. 
      //collection() is a helper function that converts the collection to a resource collection.
-        return $menu;
+     //   return $menu;
     }
 
     /**
@@ -35,16 +35,16 @@ class MenuController extends Controller
     public function create()
     {
         //first or create is a helper function that check if it exists first
-        $menu = MenuItem::firstOrCreate(
-            ['id' => '51'],
-            [
-                'name' => 'Fish and Chips',
-                'price' => 150,
-                'category_id' => Category::firstOrCreate([
-                    'type' => CategoryTypes::FOOD,
-                ])->id,
-            ]
-        );
+        //$menu = MenuItem::firstOrCreate(
+        //    ['id' => '51'],
+        //    [
+        //        'name' => 'Fish and Chips',
+        //        'price' => 150,
+         //       'category_id' => Category::firstOrCreate([
+        //            'type' => CategoryTypes::FOOD,
+         //       ])->id,
+         //   ]
+        //);
     }
 
     /**
