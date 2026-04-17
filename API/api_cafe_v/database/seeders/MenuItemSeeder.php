@@ -9,6 +9,9 @@ class MenuItemSeeder extends Seeder
 {
     public function run(): void
     {
-        MenuItem::factory(50)->create();
+        MenuItem::factory()
+        ->count(50)
+        ->create()
+        ->each(fn (MenuItem $item) => $item->update(['number' => $item->id]));
     }
 }
