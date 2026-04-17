@@ -11,7 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        $table->id();
+        $table->unsignedInteger('number');
+        $table->unsignedInteger('seats');
+        $table->foreignIdFor(Reservation::class);
+        $table->timestamps();
     }
 
     /**

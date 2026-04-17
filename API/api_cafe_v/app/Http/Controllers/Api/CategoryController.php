@@ -26,7 +26,7 @@ class CategoryController extends Controller
         $query = $this->loadRelationships(Category::query());
 
         $categories = CategoryResource::collection(
-            $query->latest()->paginate()
+            $query->paginate()
         );
 
         return $categories;

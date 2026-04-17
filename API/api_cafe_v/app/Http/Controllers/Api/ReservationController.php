@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Traits\CanLoadRelationships;
 
 class ReservationController extends Controller
 {
+    use CanLoadRelationships;
      /**
         * Display a listing of the resource.
         *
@@ -13,7 +15,13 @@ class ReservationController extends Controller
         */
     public function index()
     {
+        $query = $this->loadRelationships(Reservation::query());
 
+        $reservations = ReservationResource::collection(
+            $query->latest()->paginate()
+        );
+
+        return reservations;
 
     }
 
