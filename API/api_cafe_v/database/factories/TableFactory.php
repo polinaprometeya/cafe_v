@@ -18,7 +18,8 @@ class TableFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'number' => $this->faker->unique()->numberBetween(1, 10),
+            'seats' => 2,
         ];
     }
 }
