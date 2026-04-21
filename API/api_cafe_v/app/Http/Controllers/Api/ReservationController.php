@@ -1,13 +1,21 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\ReservationResource;
 use App\Http\Traits\CanLoadRelationships;
+use App\Models\Reservation;
+use Illuminate\Http\Request;
 
 class ReservationController extends Controller
 {
     use CanLoadRelationships;
+
+    protected function relations(): array
+    {
+        return ['tables'];
+    }
      /**
         * Display a listing of the resource.
         *
@@ -21,7 +29,7 @@ class ReservationController extends Controller
             $query->latest()->paginate()
         );
 
-        return reservations;
+        return $reservations;
 
     }
 
