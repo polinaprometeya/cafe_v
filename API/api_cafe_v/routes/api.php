@@ -11,7 +11,7 @@ Route::apiResource('reservation', ReservationController::class);
 
 Route::apiResource('category', CategoryController::class);
 
-Route::apiResource('menu', MenuController::class);
+// Route::apiResource('menu', MenuController::class);
 
 //this is a current user endpoint not a specific one
 //middleware('auth:sanctum') protects the route, you need authentication Bearer token in order to access this route
