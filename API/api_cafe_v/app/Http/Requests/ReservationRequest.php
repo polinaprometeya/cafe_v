@@ -23,7 +23,7 @@ class ReservationRequest extends FormRequest
      */
     public function rules(): array
     {
-        //'table_ids' => is the array and 'table_ids.*' =>  is an item in the array
+        //'table_ids' => is the array and 'table_ids.*' =>  is an item in the
         return [ $request->validate([
                 'guests_amount' => 'required|integer|min:1|max:8',
                 'date' => 'required|date',

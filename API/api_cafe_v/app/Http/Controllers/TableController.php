@@ -62,4 +62,9 @@ class TableController extends Controller
     {
         //
     }
+
+    public function availability(Request $request){
+        $data = $request->validated();
+    }
+
 }
