@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $table->id();
-        $table->unsignedInteger('number');
-        $table->unsignedInteger('seats');
-        $table->foreignIdFor(Reservation::class);
-        $table->timestamps();
+        Schema::create('tables', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedInteger('number')->unique(); //table needs to be uniquely numbered
+            $table->unsignedInteger('seats');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('tables');
     }
 };

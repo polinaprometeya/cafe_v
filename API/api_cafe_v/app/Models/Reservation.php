@@ -4,8 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Reservation extends Model
 {
@@ -18,8 +17,7 @@ class Reservation extends Model
         'start_time',
         'end_time',
         'reservation_name',
-        'reservation_number',
-        'table_id'
+        'reservation_number'
     ];
 
     // public function user(): BelongsTo
@@ -28,8 +26,13 @@ class Reservation extends Model
     //     'reservation_name' would be accompanied user_id
     // }
 
-    public function tables(): HasMany
+    public function tables(): BelongsToMany
     {
-        return $this->hasMany(Table::class);
+        return $this->belongsToMany(
+            Table::class,
+            'reservation_tables',
+            'reservation_id',
+            'table_id'
+        );
     }
 }
