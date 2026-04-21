@@ -1,4 +1,4 @@
-import api from "./_api";
+import { apiRequest } from "./api";
 
 export type MenuItem = {
   id: number | string;
@@ -16,10 +16,9 @@ export type Category = {
 
 export type PaginatedCategoryResponse = {
   data: Category[];
-  // allow extra fields like links/meta without typing them
   [key: string]: unknown;
 };
 
 export const getMenuByCategory = (): Promise<PaginatedCategoryResponse> =>
-  api.apiRequest("/category");
+  apiRequest("/category");
 

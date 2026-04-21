@@ -1,11 +1,11 @@
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
-type ApiRequestOptions = RequestInit & {
+export type ApiRequestOptions = RequestInit & {
   headers?: Record<string, string>;
   body?: any;
 };
 
-async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
+export async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
   const config: RequestInit = {
@@ -16,7 +16,6 @@ async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
     ...options,
   };
 
-  // If caller passed an object body, JSON-stringify it
   if (
     (config as any).body &&
     typeof (config as any).body === "object" &&
@@ -42,7 +41,4 @@ async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
   }
   return await response.text();
 }
-
-const api = { apiRequest };
-export default api;
 

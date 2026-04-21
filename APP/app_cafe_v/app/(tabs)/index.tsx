@@ -11,7 +11,7 @@ import {
   type Category,
   type MenuItem,
   type PaginatedCategoryResponse,
-} from "../routes";
+} from "../../src/api/routes";
 import Table from "../components/table";
 import { useEffect, useState } from "react";
 
