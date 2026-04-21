@@ -62,12 +62,10 @@ class ReservationController extends Controller
 
         
         //$reservation = new ReservationResource($reservation);
-        //$event = new EventResource($event);
+        //this->authorize('create', Post::class);         //you can add manual authorization
 
-        //you can add manual authorization
-        //this->authorize('create', Post::class);
+        //$reservation = new ReservationResource($this->loadRelationships(Reservation::create($data)));
 
-        //$event = new EventResource($this->loadRelationships(Event::create($data)));
         return $event;
     }
 
