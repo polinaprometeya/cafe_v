@@ -13,7 +13,7 @@ class ReservationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,14 +24,15 @@ class ReservationRequest extends FormRequest
     public function rules(): array
     {
         //'table_ids' => is the array and 'table_ids.*' =>  is an item in the
-        return [ $request->validate([
-                'guests_amount' => 'required|integer|min:1|max:8',
-                'date' => 'required|date',
-                'start_time' => 'required|date',
-                'end_time' => 'required|date|after:start_time']),
-                'reservation_number' => 'required|string|unique:reservations,reservation_number',
-                'table_ids' => 'required|array|min:1',
-                'table_ids.*' => 'integer|exists:tables,id',
+        return [
+            'guests_amount' => 'required|integer|min:1|max:8',
+            'date' => 'required|date',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'reservation_name' => 'required|string|max:255',
+            'reservation_number' => 'required|string',
+            'table_ids' => 'required|array|min:1',
+            'table_ids.*' => 'integer|exists:tables,id',
         ];
     }
 }

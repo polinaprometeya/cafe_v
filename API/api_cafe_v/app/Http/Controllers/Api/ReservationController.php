@@ -66,7 +66,7 @@ class ReservationController extends Controller
 
         //$reservation = new ReservationResource($this->loadRelationships(Reservation::create($data)));
 
-        return $event;
+        return $reservation;
     }
 
     /**
