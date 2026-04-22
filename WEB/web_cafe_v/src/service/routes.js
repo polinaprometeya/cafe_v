@@ -6,10 +6,12 @@ export const getMenuByCategory = () => api.apiRequest("/category");
 
 //RESERVATION CRUD
 
-export const createReservation = async (reservationInfo) => {
-    return api.apiRequest('/Reservation/addReservation', {
+//export const getReservations = () => api.apiRequest("/reservation");
+
+export const createReservation = async (payload) => {
+    return api.apiRequest('/reservation', {
         method: 'POST',
-        body: reservationInfo,
+        body: payload,
     });
 }
 

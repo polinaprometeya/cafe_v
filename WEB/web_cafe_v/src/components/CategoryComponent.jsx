@@ -1,5 +1,5 @@
 import { getMenuByCategory } from "../service/routes";
-import Table from "../components/Table";
+import Table from "./Table";
 import { useEffect, useState } from "react";
 
 export default function Category() {
