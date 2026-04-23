@@ -2,6 +2,14 @@ export function RandomNumber() {
     var randomNumber = Math.floor(Math.random());
     return randomNumber;
   }
+
+export function PlusButton(props) {
+    return  <button {...props}>+</button>;
+  }
+
+  export function MinusButton(props) {
+    return  <button {...props}>-</button>;
+  }
   
   export function ClampedCounter({ count, updateCount }) 
 {
@@ -12,15 +20,15 @@ export function RandomNumber() {
 
     function changeNumber(amount) 
     {
-        const number = clamp(count + amount, 1, 56);
+        const number = clamp(count + amount, 1, 8);
         updateCount(number);
     }
 
     return (
         <>
-            <button className="btn_people increase" onClick={() => changeNumber(-1)}>-</button>
+            <MinusButton className="btn_people increase" onClick={() => changeNumber(-1)}/>
             <p className="count">{count}</p>
-            <button className="btn_people decrease" onClick={() => changeNumber(1)}>+</button>
+            <PlusButton className="btn_people decrease" onClick={() => changeNumber(1)}/>
         </>)
 
 }
@@ -92,15 +100,15 @@ export function TimeSelector({ selectedTime, updateTime }) {
   return (
   <>
       <div className="numControl hour">
-          <button className="btn_num increase" onClick={() => changeHour(1)}></button>
+          <PlusButton className="btn_num increase" onClick={() => changeHour(1)}/>
           <p className="count">{hour > 9 ? hour : `0${hour}`}</p>
-          <button className="btn_num decrease" onClick={() => changeHour(-1)}/>
+          <MinusButton className="btn_num decrease" onClick={() => changeHour(-1)}/>
       </div>
       <p className="count">:</p>
       <div className="numControl quarter">
-          <button className="btn_num increase" onClick={() => changeQuater(1)}/>
+          <PlusButton className="btn_num increase" onClick={() => changeQuater(1)}/>
           <p className="count">{quarter > 0 ? quarter * 15 : "00"}</p>
-          <button className="btn_num decrease" onClick={() => changeQuater(-1)}></button>
+          <MinusButton className="btn_num decrease" onClick={() => changeQuater(-1)}/>
       </div>
   </>)
 
