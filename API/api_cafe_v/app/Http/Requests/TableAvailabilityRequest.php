@@ -12,7 +12,7 @@ class TableAvailabilityRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return True;
+        return true;
     }
 
     /**
@@ -22,13 +22,13 @@ class TableAvailabilityRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [ $request->validate([
+        return [
             'date' => 'required|date',
             'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time']),
+            'end_time' => 'required|date|after:start_time',
             'guests_amount' => 'required|integer|min:1|max:8',
             'table_ids' => 'required|array|min:1',
             'table_ids.*' => 'integer|exists:tables,id',
-    ];
+        ];
     }
 }

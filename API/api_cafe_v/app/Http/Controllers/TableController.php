@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TableAvailabilityRequest;
 use App\Models\Table;
 use Illuminate\Http\Request;
 
@@ -63,8 +64,34 @@ class TableController extends Controller
         //
     }
 
-    public function availability(Request $request){
+    public function availability(TableAvailabilityRequest $request)
+    {
         $data = $request->validated();
+
+        $start = $data['start_time'];
+        $end = $data['end_time'];
+        $requestedTableIds = $data['table_ids'];
+
+        $unavailableTableIds = Table::query()
+            ->whereIn('id', $requestedTableIds)
+            ->whereHas('reservations', function ($q) use ($start, $end) {
+                // overlap condition: existing.start < requested.end AND existing.end > requested.start
+                $q->where('start_time', '<', $end)
+                    ->where('end_time', '>', $start);
+            })
+            ->pluck('id')
+            ->values();
+
+        $availableTableIds = collect($requestedTableIds)
+            ->diff($unavailableTableIds)
+            ->values();
+
+        return response()->json([
+            'requested_table_ids' => array_values($requestedTableIds),
+            'available_table_ids' => $availableTableIds,
+            'unavailable_table_ids' => $unavailableTableIds,
+            'is_all_available' => $unavailableTableIds->isEmpty(),
+        ]);
     }
 
 }

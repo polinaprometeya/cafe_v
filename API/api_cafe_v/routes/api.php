@@ -4,10 +4,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\TableController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 
 Route::apiResource('reservation', ReservationController::class);
+
+Route::post('tables/availability', [TableController::class, 'availability']);
 
 Route::apiResource('category', CategoryController::class);
 

@@ -8,6 +8,7 @@ use App\Http\Resources\ReservationResource;
 use App\Http\Requests\ReservationRequest;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Reservation;
+use App\Models\Table;
 use Illuminate\Http\Request;
 
 class ReservationController extends Controller
@@ -56,6 +57,25 @@ class ReservationController extends Controller
 
         $tableIds = $data['table_ids'] ?? [];   // e.g. [1,2,3] , make sure it is present , this does not silently fail
         unset($data['table_ids']); // keep only reservation columns
+
+        $start = $data['start_time'];
+        $end = $data['end_time'];
+
+        $unavailableTableIds = Table::query()
+            ->whereIn('id', $tableIds)
+            ->whereHas('reservations', function ($q) use ($start, $end) {
+                $q->where('start_time', '<', $end)
+                    ->where('end_time', '>', $start);
+            })
+            ->pluck('id')
+            ->values();
+
+        if ($unavailableTableIds->isNotEmpty()) {
+            return response()->json([
+                'message' => 'Some selected tables are not available for the requested time.',
+                'unavailable_table_ids' => $unavailableTableIds,
+            ], 422);
+        }
      
         $reservation = Reservation::create($data);
         $reservation->tables()->syncWithoutDetaching($tableIds);
