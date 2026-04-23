@@ -70,10 +70,15 @@ export default function Reservation() {
 
   const tabs = {
     date: (
-      <DateTimeTab reservationInfo={reservationInfo} setDate={setDate} setTime={setTime} />
+      <DateTimeTab 
+        reservationInfo={reservationInfo} 
+        setDate={setDate} 
+        setTime={setTime} />
     ),
     guests: (
-      <GuestsTab reservationInfo={reservationInfo} setPeopleCount={setPeopleCount} />
+      <GuestsTab 
+        reservationInfo={reservationInfo} 
+        setPeopleCount={setPeopleCount} />
     ),
     reservation: (
       <DetailsTab
@@ -93,7 +98,7 @@ export default function Reservation() {
         <button onClick={() => setSelectedHeaderTopic("reservation")}>Details</button>
       </menu>
 
-      {tabs[selectedHeaderTopic]}
+      <div className="tabContent">{tabs[selectedHeaderTopic]}</div>
     </main>
   );
 }

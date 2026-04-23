@@ -99,7 +99,8 @@ export function TimeSelector({ selectedTime, updateTime }) {
 
   return (
   <>
-      <div className="numControl hour">
+  <div className="tabComponent">
+         <div className="numControl hour">
           <PlusButton className="btn_num increase" onClick={() => changeHour(1)}/>
           <p className="count">{hour > 9 ? hour : `0${hour}`}</p>
           <MinusButton className="btn_num decrease" onClick={() => changeHour(-1)}/>
@@ -109,7 +110,10 @@ export function TimeSelector({ selectedTime, updateTime }) {
           <PlusButton className="btn_num increase" onClick={() => changeQuater(1)}/>
           <p className="count">{quarter > 0 ? quarter * 15 : "00"}</p>
           <MinusButton className="btn_num decrease" onClick={() => changeQuater(-1)}/>
-      </div>
+      </div> 
+
+  </div>
+
   </>)
 
 }

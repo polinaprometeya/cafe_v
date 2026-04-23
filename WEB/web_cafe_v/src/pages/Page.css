@@ -35,6 +35,10 @@ main {
   transform: translateY(1px);
 }
 
+.tabContent {
+  display: inline-block;
+}
+
 /* Reservation form (used by ReservationComponent.jsx) */
 .Form {
   max-width: 560px;
