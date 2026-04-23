@@ -76,3 +76,34 @@ main {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* People counter layout: -  count  + */
+.counterRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn_people {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.count {
+  margin: 0;
+  min-width: 44px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  display: inline-block;
+}

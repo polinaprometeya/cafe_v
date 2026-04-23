@@ -25,11 +25,11 @@ export function PlusButton(props) {
     }
 
     return (
-        <>
+        <div className="counterRow">
             <MinusButton className="btn_people increase" onClick={() => changeNumber(-1)}/>
             <p className="count">{count}</p>
             <PlusButton className="btn_people decrease" onClick={() => changeNumber(1)}/>
-        </>)
+        </div>)
 
 }
 
