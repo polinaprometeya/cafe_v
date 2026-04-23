@@ -10,6 +10,7 @@ use App\Http\Traits\CanLoadRelationships;
 use App\Models\Reservation;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
@@ -53,6 +54,21 @@ class ReservationController extends Controller
         */
     public function store(ReservationRequest $request)
     {
+
+        //sp_create_reservation <--- name of the stored procedure
+
+        // $tableIdsJson = json_encode($request->input('table_ids'));
+        //     $result = DB::select('CALL sp_create_reservation(?, ?, ?, ?, ?, ?, ?)', [
+        //         $request->guests_amount,
+        //         $request->date,
+        //         $request->start_time,
+        //         $request->end_time,
+        //         $request->reservation_name,
+        //         $request->reservation_number,
+        //         $tableIdsJson,
+        //     ]);
+        //     $reservationId = $result[0]->reservation_id ?? null;
+
         $data = $request->validated();
 
         $tableIds = $data['table_ids'] ?? [];   // e.g. [1,2,3] , make sure it is present , this does not silently fail
