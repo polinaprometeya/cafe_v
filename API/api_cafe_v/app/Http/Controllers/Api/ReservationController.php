@@ -8,9 +8,9 @@ use App\Http\Resources\ReservationResource;
 use App\Http\Requests\ReservationRequest;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Reservation;
-use App\Models\Table;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Services\ReservationCreator;
+use RuntimeException;
 
 class ReservationController extends Controller
 {
@@ -54,53 +54,27 @@ class ReservationController extends Controller
         */
     public function store(ReservationRequest $request)
     {
-
-        //sp_create_reservation <--- name of the stored procedure
-
-        // $tableIdsJson = json_encode($request->input('table_ids'));
-        //     $result = DB::select('CALL sp_create_reservation(?, ?, ?, ?, ?, ?, ?)', [
-        //         $request->guests_amount,
-        //         $request->date,
-        //         $request->start_time,
-        //         $request->end_time,
-        //         $request->reservation_name,
-        //         $request->reservation_number,
-        //         $tableIdsJson,
-        //     ]);
-        //     $reservationId = $result[0]->reservation_id ?? null;
-
         $data = $request->validated();
 
-        $tableIds = $data['table_ids'] ?? [];   // e.g. [1,2,3] , make sure it is present , this does not silently fail
-        unset($data['table_ids']); // keep only reservation columns
+        try {
+            $reservation = app(ReservationCreator::class)->create($data);
+        } catch (RuntimeException $e) {
+            $message = $e->getMessage();
 
-        $start = $data['start_time'];
-        $end = $data['end_time'];
+            if (str_starts_with($message, 'UNAVAILABLE_TABLES:')) {
+                $csv = substr($message, strlen('UNAVAILABLE_TABLES:'));
+                $ids = $csv === '' ? [] : array_map('intval', explode(',', $csv));
 
-        $unavailableTableIds = Table::query()
-            ->whereIn('id', $tableIds)
-            ->whereHas('reservations', function ($q) use ($start, $end) {
-                $q->where('start_time', '<', $end)
-                    ->where('end_time', '>', $start);
-            })
-            ->pluck('id')
-            ->values();
+                return response()->json([
+                    'message' => 'Some selected tables are not available for the requested time.',
+                    'unavailable_table_ids' => $ids,
+                ], 422);
+            }
 
-        if ($unavailableTableIds->isNotEmpty()) {
             return response()->json([
-                'message' => 'Some selected tables are not available for the requested time.',
-                'unavailable_table_ids' => $unavailableTableIds,
+                'message' => $message,
             ], 422);
         }
-     
-        $reservation = Reservation::create($data);
-        $reservation->tables()->syncWithoutDetaching($tableIds);
-
-        
-        //$reservation = new ReservationResource($reservation);
-        //this->authorize('create', Post::class);         //you can add manual authorization
-
-        //$reservation = new ReservationResource($this->loadRelationships(Reservation::create($data)));
 
         return $reservation;
     }
