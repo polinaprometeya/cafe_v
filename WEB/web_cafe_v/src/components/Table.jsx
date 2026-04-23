@@ -1,6 +1,6 @@
 import "./Component.css"
 
-function Table({ theadData = [], tbodyData = [], customClass }) {
+export function Table({ theadData = [], tbodyData = [], customClass }) {
     const TableHeadItem = ({ item }) => (
         <td title={item}>{item}</td>
     );
@@ -33,4 +33,3 @@ function Table({ theadData = [], tbodyData = [], customClass }) {
     );
 }
 
-export default Table;

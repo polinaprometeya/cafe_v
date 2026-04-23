@@ -1,87 +1,34 @@
 import { useEffect, useState } from "react";
-import { ReservationForm, SelectDateTime , SelectpartySize } from "../components/ReservationComponent";
+import { ReservationButtonsList} from "../components/ReservationComponent";
 import Section from "../Layout/Section.jsx";
 import Tabs from "../Layout/Tabs.jsx";
 import "./Page.css";
 
 export default function Reservation() {
-  //useState(); //cannot be nested somewhere else, has to be used directly
-  const [selectedTopic, setSelectedTopic] = useState("");
+    const [selectedHeaderTopic, handleSelectedHeaderTopic] = useState("date");
 
-  function handleSelect(selectedButton) {
-    setSelectedTopic(selectedButton);
-  }
+    function headerTabSelect(clickButton) {
+      handleSelectedHeaderTopic(clickButton);
+    }
+  
+    let content;
+    if (selectedHeaderTopic) {
+      content = ReservationButtonsList[selectedHeaderTopic].content;
+    }
 
-  function TabButton({ children, onSelect, isSelected }) {
-    //onSelect --- you can give this a custom name of your choice
-    //children needs to be named children
-    //if you add () in onClick={handelSelect()} this function will be executed when button is rendered not when you click
-    return (
-      <li className="examples">
-        <button
-          className={isSelected ? "active" : undefined}
-          onClick={onSelect}
-        >
-          {children}
-        </button>
-      </li>
-    );
-  }
-
-  function MenuButtonsRow({ selectedTopic }) {
-    const menuButtons = ["Date", "Guests", "Reservation"];
-    const buttonsRow = menuButtons.map((item) => (
-      <TabButton
-        key={item}
-        isSelected={selectedTopic === item}
-        onSelect={() => handleSelect(item)}
-      >
-        {item}
-      </TabButton>
-    ));
-    return <>{buttonsRow}</>;
-  }
-
+    
   return (
-    <Section title="Examples" id="examples">
-      {/* <ExamplesTabTable
-                selectedTopic={selectedTopic}
-                handleSelect={handleSelect}
-              /> */}
-      <Tabs
-        buttons={
-          <MenuButtonsRow selectedTopic={selectedTopic} />
-          //Manual approach -->
-          //   <TabButton
-          //     isSelected={selectedTopic === "components"}
-          //     onSelect={() => handleSelect("components")}
-          //   >
-          //     Components
-          //   </TabButton>
 
-          //You can give the buttonsContainer wrapper a custom made one using a component like this -->buttonContainer={Section}
-        }
-      >
-        {/* {tabContent} */}
-        {/* {selectedTopic} */}
-        {/* {!selectedTopic && <p>Select a topic</p>} */}
+      <main>
+        <menu className="headerTabs" id="headerTabs">
+          <button onClick={() => headerTabSelect("date")}>Concepts</button>
+          <button onClick={() => headerTabSelect("guests")}>Games</button>
+          <button onClick={() => headerTabSelect("reservation")}>Cards</button>
+        </menu>
 
-        {/* {selectedTopic ? (
-          <div id="tab-content">
-            <h3>{EXAMPLES[selectedTopic].title}</h3>
-            <p>{EXAMPLES[selectedTopic].description}</p>
-            <pre>
-              <code>{EXAMPLES[selectedTopic].code}</code>
-            </pre>
-          </div>
-        ) : (
-          <p>Select a topic</p>
-        )} */}
+        {content}
+      </main>
 
-
-         {selectedTopic} 
-      </Tabs>
-    </Section>
   );
 }
 

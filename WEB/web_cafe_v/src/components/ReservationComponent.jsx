@@ -8,6 +8,10 @@ export function SelectpartySize(){
     return <>PartySize</>
 }
 
+export function ReservationDummy(){
+    return <>Reservation </>
+}
+
 export function ReservationForm({ reservationInfo, updateField, onSubmit, isDisabled}) 
 {
 
@@ -70,3 +74,19 @@ export function ReservationForm({ reservationInfo, updateField, onSubmit, isDisa
     );
 
 }
+
+export const ReservationButtonsList = {
+    date: {
+      title: "Date",
+      content: <SelectDateTime />,
+    },
+    guests: {
+      title: "Guests",
+      content: <SelectpartySize />,
+    },
+    reservation: {
+        title: "Reservation",
+        content: <ReservationDummy />,
+      },
+  };
+  

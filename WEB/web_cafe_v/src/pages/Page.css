@@ -1,59 +1,78 @@
+/* Basic page styles for Reservation page */
 
-#examples {
-    margin: 3rem auto;
-  }
-  
-  #examples h2 {
-    text-align: left;
-  }
-  
-  #examples menu {
-    margin: 1rem 0;
-    padding: 0;
-    display: flex;
-    gap: 0.5rem;
-    list-style: none;
-  }
-  
-  #examples menu button {
-    padding: 0.6rem 1rem;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 999px;
-    background-color: rgba(15, 23, 42, 0.6);
-    color: #cbd5e1;
-    font-family: "Roboto Condensed", sans-serif;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    backdrop-filter: blur(6px);
-  }
-  
-  #examples menu button:hover {
-    background-color: rgba(30, 41, 59, 0.9);
-    color: #e2e8f0;
-    transform: translateY(-1px);
-  }
-  
-  #examples menu button.active {
-    background-color: #6366f1;
-    border-color: #6366f1;
-    color: white;
-  }
-  
-  #tab-content {
-    padding: 1.25rem;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7));
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    backdrop-filter: blur(8px);
-  }
-  
-  #tab-content h3 {
-    margin: 0;
-  }
-  
-  #tab-content code {
-    font-size: 0.95rem;
-  }
-  
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+.headerTabs {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  margin: 0 0 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.headerTabs button {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.headerTabs button:hover {
+  background: #f3f4f6;
+}
+
+.headerTabs button:active {
+  transform: translateY(1px);
+}
+
+/* Reservation form (used by ReservationComponent.jsx) */
+.Form {
+  max-width: 560px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  gap: 12px;
+}
+
+.Form label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.Form input[type="text"],
+.Form input[type="number"],
+.Form input[type="date"] {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.submit {
+  border: none;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  padding: 12px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
