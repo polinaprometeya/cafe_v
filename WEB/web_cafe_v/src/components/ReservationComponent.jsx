@@ -1,7 +1,7 @@
 
 
 export function SelectDateTime(){
-    return <>Date</>
+    return <>Date and Time</>
 }
 
 export function SelectpartySize(){
