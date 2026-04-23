@@ -7,11 +7,11 @@ export function PlusButton(props) {
     return  <button {...props}>+</button>;
   }
 
-  export function MinusButton(props) {
+export function MinusButton(props) {
     return  <button {...props}>-</button>;
   }
   
-  export function ClampedCounter({ count, updateCount }) 
+export function ClampedCounter({ count, updateCount }) 
 {
     function clamp(value, min, max) 
     {
@@ -112,4 +112,21 @@ export function TimeSelector({ selectedTime, updateTime }) {
       </div>
   </>)
 
+}
+
+export function TimeFormatterHHMM(date){
+    const d = new Date(date);
+    const h = String(d.getHours()).padStart(2, "0");
+    const m = String(d.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
+  
+
+}
+
+export function DateFormatterYYYYMMDD(date) {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

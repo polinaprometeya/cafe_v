@@ -1,17 +1,8 @@
-import { ClampedCounter, DateSelector as UtilityDateSelector, TimeSelector as UtilityTimeSelector } from "./Utility";
-
-// Backwards-compatible name for reservation UI
-export function PeopleCounter(props) {
-  return <ClampedCounter {...props} />;
-}
-
-export function DateSelector(props) {
-  return <UtilityDateSelector {...props} />;
-}
-
-export function TimeSelector(props) {
-  return <UtilityTimeSelector {...props} />;
-}
+import {
+  ClampedCounter,
+  DateSelector,
+  TimeSelector,
+} from "./Utility";
 
 export function ReservationForm({
   reservationInfo,
@@ -21,7 +12,6 @@ export function ReservationForm({
 }) {
   return (
     <form className="Form" onSubmit={onSubmit}>
-      {/* Hidden inputs */}
       <input
         type="hidden"
         name="reservationDate"
@@ -31,7 +21,6 @@ export function ReservationForm({
       <input type="hidden" name="endTime" value={reservationInfo.endTime} />
       <input type="hidden" name="partySize" value={reservationInfo.partySize} />
 
-      {/* Visible inputs */}
       <label>
         Reservation under name :{" "}
         <input
@@ -69,8 +58,35 @@ export function ReservationForm({
       </label>
 
       <button className="submit" type="submit" disabled={isDisabled}>
-        {isDisabled === false ? "Submit" : "Submitting..."}
+        {isDisabled ? "Submitting..." : "Submit"}
       </button>
     </form>
+  );
+}
+
+export function DateTimeTab({ reservationInfo, setDate, setTime }) {
+  return (
+    <>
+      <DateSelector selectedDate={reservationInfo.reservationDate} updateDate={setDate} />
+      <div style={{ height: 12 }} />
+      <TimeSelector selectedTime={reservationInfo.startTime} updateTime={setTime} />
+    </>
+  );
+}
+
+export function GuestsTab({ reservationInfo, setPeopleCount }) {
+  return (
+    <ClampedCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
+  );
+}
+
+export function DetailsTab({ reservationInfo, updateField, handleSubmit, isLoading }) {
+  return (
+    <ReservationForm
+      reservationInfo={reservationInfo}
+      updateField={updateField}
+      onSubmit={handleSubmit}
+      isDisabled={isLoading}
+    />
   );
 }

@@ -1,16 +1,15 @@
 import { useState } from "react";
-import {
-  DateSelector,
-  PeopleCounter,
-  ReservationForm,
-  TimeSelector,
-} from "../components/ReservationComponent";
+import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
 import { createReservation } from "../service/routes";
+import {
+  DateTimeTab,
+  DetailsTab,
+  GuestsTab,
+} from "../components/ReservationComponent";
 import "./Page.css";
 
 export default function Reservation() {
   const [selectedHeaderTopic, setSelectedHeaderTopic] = useState("date");
-  const [toast, setToast] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const initStartTime = new Date();
@@ -49,84 +48,52 @@ export default function Reservation() {
     updateField("reservationDate", date);
   };
 
-  function formatDateYYYYMMDD(date) {
-    const d = new Date(date);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  function formatTimeHHMM(date) {
-    const d = new Date(date);
-    const h = String(d.getHours()).padStart(2, "0");
-    const m = String(d.getMinutes()).padStart(2, "0");
-    return `${h}:${m}`;
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading === true) return;
+    if (isLoading) return;
 
-    setIsLoading(true);
     const payload = {
       ...reservationInfo,
-      reservationDate: formatDateYYYYMMDD(reservationInfo.reservationDate),
-      startTime: formatTimeHHMM(reservationInfo.startTime),
-      endTime: formatTimeHHMM(reservationInfo.endTime),
+      reservationDate: DateFormatterYYYYMMDD(reservationInfo.reservationDate),
+      startTime: TimeFormatterHHMM(reservationInfo.startTime),
+      endTime: TimeFormatterHHMM(reservationInfo.endTime),
       phoneNumber: String(reservationInfo.phoneNumber),
     };
 
     try {
-      const saveReservation = await createReservation(payload);
-      if (saveReservation) setToast(saveReservation);
+      setIsLoading(true);
+      await createReservation(payload);
     } finally {
       setIsLoading(false);
     }
   };
 
-  function headerTabSelect(clickButton) {
-    setSelectedHeaderTopic(clickButton);
-  }
-
-  let content = null;
-  if (selectedHeaderTopic === "date") {
-    content = (
-      <>
-        <DateSelector
-          selectedDate={reservationInfo.reservationDate}
-          updateDate={setDate}
-        />
-        <div style={{ height: 12 }} />
-        <TimeSelector selectedTime={reservationInfo.startTime} updateTime={setTime} />
-      </>
-    );
-  } else if (selectedHeaderTopic === "guests") {
-    content = (
-      <PeopleCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
-    );
-  } else if (selectedHeaderTopic === "reservation") {
-    content = (
-      <ReservationForm
+  const tabs = {
+    date: (
+      <DateTimeTab reservationInfo={reservationInfo} setDate={setDate} setTime={setTime} />
+    ),
+    guests: (
+      <GuestsTab reservationInfo={reservationInfo} setPeopleCount={setPeopleCount} />
+    ),
+    reservation: (
+      <DetailsTab
         reservationInfo={reservationInfo}
         updateField={updateField}
-        onSubmit={handleSubmit}
-        isDisabled={isLoading}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
       />
-    );
-  }
+    ),
+  };
 
   return (
     <main>
-      {toast != null && <p className="toast">{toast}</p>}
-
       <menu className="headerTabs" id="headerTabs">
-        <button onClick={() => headerTabSelect("date")}>Date/Time</button>
-        <button onClick={() => headerTabSelect("guests")}>Guests</button>
-        <button onClick={() => headerTabSelect("reservation")}>Details</button>
+        <button onClick={() => setSelectedHeaderTopic("date")}>Date/Time</button>
+        <button onClick={() => setSelectedHeaderTopic("guests")}>Guests</button>
+        <button onClick={() => setSelectedHeaderTopic("reservation")}>Details</button>
       </menu>
 
-      {content}
+      {tabs[selectedHeaderTopic]}
     </main>
   );
 }
