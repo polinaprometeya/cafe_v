@@ -1,92 +1,76 @@
+import { ClampedCounter, DateSelector as UtilityDateSelector, TimeSelector as UtilityTimeSelector } from "./Utility";
 
-
-export function SelectDateTime(){
-    return <>Date and Time</>
+// Backwards-compatible name for reservation UI
+export function PeopleCounter(props) {
+  return <ClampedCounter {...props} />;
 }
 
-export function SelectpartySize(){
-    return <>PartySize</>
+export function DateSelector(props) {
+  return <UtilityDateSelector {...props} />;
 }
 
-export function ReservationDummy(){
-    return <>Reservation </>
+export function TimeSelector(props) {
+  return <UtilityTimeSelector {...props} />;
 }
 
-export function ReservationForm({ reservationInfo, updateField, onSubmit, isDisabled}) 
-{
+export function ReservationForm({
+  reservationInfo,
+  updateField,
+  onSubmit,
+  isDisabled,
+}) {
+  return (
+    <form className="Form" onSubmit={onSubmit}>
+      {/* Hidden inputs */}
+      <input
+        type="hidden"
+        name="reservationDate"
+        value={reservationInfo.reservationDate}
+      />
+      <input type="hidden" name="startTime" value={reservationInfo.startTime} />
+      <input type="hidden" name="endTime" value={reservationInfo.endTime} />
+      <input type="hidden" name="partySize" value={reservationInfo.partySize} />
 
-    return (
-        <form className="Form" onSubmit={onSubmit}>
+      {/* Visible inputs */}
+      <label>
+        Reservation under name :{" "}
+        <input
+          name="reservee"
+          type="text"
+          value={reservationInfo.reservee}
+          onChange={(e) => updateField("reservee", e.target.value)}
+          placeholder={"Full Name"}
+          disabled={isDisabled}
+        />
+      </label>
 
-            {/* Hidden inputs */}
+      <label>
+        Email :{" "}
+        <input
+          name="email"
+          type="text"
+          value={reservationInfo.email}
+          onChange={(e) => updateField("email", e.target.value)}
+          placeholder={"Email"}
+          disabled={isDisabled}
+        />
+      </label>
 
-            <input type="hidden" name="reservationDate" value={reservationInfo.reservationDate} />
-            <input type="hidden" name="startTime" value={reservationInfo.startTime} />
-            <input type="hidden" name="endTime" value={reservationInfo.endTime} />
-            <input type="hidden" name="partySize" value={reservationInfo.partySize} />
+      <label>
+        Mobil Number :{" "}
+        <input
+          name="phoneNumber"
+          type="number"
+          value={reservationInfo.phoneNumber}
+          onChange={(e) => updateField("phoneNumber", e.target.value)}
+          placeholder={"Mobil Number"}
+          disabled={isDisabled}
+        />
+      </label>
 
-            {/* Visible inputs */}
-            <label>
-                Reservation under name :{" "}
-                <input
-                    name="reservee"
-                    type="text"
-                    value={reservationInfo.reservee}
-                    onChange={(e)=> updateField('reservee', e.target.value)}
-                    placeholder={'Full Name' }
-                    disabled={isDisabled}
-                />
-            </label>
-            
-            <label>
-                Email :{" "}
-                <input
-                    name="email"
-                    type="text"
-                    value={reservationInfo.email}
-                    onChange={(e)=> updateField('email', e.target.value)}
-                    placeholder={'Email' }
-                    disabled={isDisabled}
-                />
-            </label>
-
-            <label>
-                Mobil Number :{" "}
-                <input
-                    name="phoneNumber"
-                    type="number"
-                    value={reservationInfo.phoneNumber}
-                    onChange={(e)=> updateField('phoneNumber', e.target.value)}
-                    placeholder={'Mobil Number'}
-                    disabled={isDisabled}
-                />
-            </label>
-
-
-            {/* Hidden inputs */}
-            
-
-            {/* Finish */}
-            <button className="submit" type="submit" disabled={isDisabled}>
-                {isDisabled == false? "Submit" : "Submitting..."}
-            </button>
-        </form>
-    );
-
+      <button className="submit" type="submit" disabled={isDisabled}>
+        {isDisabled === false ? "Submit" : "Submitting..."}
+      </button>
+    </form>
+  );
 }
-
-export const ReservationButtonsList = {
-    date: {
-      title: "Date",
-      content: <SelectDateTime />,
-    },
-    guests: {
-      title: "Guests",
-      content: <SelectpartySize />,
-    },
-    reservation: {
-        title: "Reservation",
-        content: <ReservationDummy />,
-      },
-  };
-  
