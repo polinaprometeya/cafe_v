@@ -35,7 +35,26 @@ async function apiRequest(endpoint, options = {}) {
         }
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // Try to extract a useful error body for debugging (Laravel often returns JSON).
+            const contentType = response.headers.get("content-type");
+            let body = null;
+
+            try {
+                if (contentType && contentType.includes("application/json")) {
+                    body = await response.json();
+                } else {
+                    body = await response.text();
+                }
+            } catch {
+                // ignore body parsing failures
+            }
+
+            const details =
+                body && typeof body === "object"
+                    ? JSON.stringify(body)
+                    : String(body ?? "");
+
+            throw new Error(`HTTP error! status: ${response.status}${details ? ` body: ${details}` : ""}`);
         }
 
         if (response.status === 204) {
