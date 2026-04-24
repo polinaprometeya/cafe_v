@@ -63,13 +63,20 @@ class ReservationController extends Controller
         } catch (RuntimeException $e) {
             $message = $e->getMessage();
 
-            if (str_starts_with($message, 'UNAVAILABLE_TABLES:')) {
-                $csv = substr($message, strlen('UNAVAILABLE_TABLES:'));
-                $ids = $csv === '' ? [] : array_map('intval', explode(',', $csv));
+            $prefix = 'UNAVAILABLE_TABLES:';
+
+            // ReservationService throws: "UNAVAILABLE_TABLES:1,2,3"
+            // This parses the ids (1,2,3) into an integer array [1, 2, 3]
+            if (str_starts_with($message, $prefix)) {
+                $csvIds = substr($message, strlen($prefix)); // "1,2,3"
+
+                $unavailableIds = $csvIds === ''
+                    ? []
+                    : array_map('intval', explode(',', $csvIds));
 
                 return response()->json([
                     'message' => 'Some selected tables are not available for the requested time.',
-                    'unavailable_table_ids' => $ids,
+                    'unavailable_table_ids' => $unavailableIds,
                 ], 422);
             }
 
