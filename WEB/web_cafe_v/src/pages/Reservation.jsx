@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
 import { createReservation, holdReservation, tableAvailability } from "../service/routes";
 import {
@@ -84,58 +84,56 @@ export default function Reservation() {
     };
   };
 
-  // 1) Availability fetch whenever date/time changes.
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadAvailability() {
-      setError("");
-      setAvailabilityLoading(true);
-
-      try {
-        const { start_time, end_time } = buildDateTimes();
-        const res = await tableAvailability({ start_time, end_time });
-
-        if (isCancelled) return;
-
-        const ids = Array.isArray(res?.available_table_ids) ? res.available_table_ids : [];
-        const sortedIds = [...ids].map(Number).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
-
-        setAvailableTableIds(sortedIds);
-
-        // auto-pick first N tables
-        const auto = sortedIds.slice(0, requiredTableCount);
-        setSelectedTableIds(auto);
-
-        if (sortedIds.length < requiredTableCount) {
-          setError("Not enough tables available for the selected time.");
-        }
-      } catch (e) {
-        if (!isCancelled) setError("Failed to load available tables.");
-      } finally {
-        if (!isCancelled) setAvailabilityLoading(false);
-      }
-    }
-
-    loadAvailability();
-
-    return () => {
-      isCancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reservationInfo.reservationDate, reservationInfo.startTime, reservationInfo.endTime, requiredTableCount]);
-
-  // 2) If selection changes manually, clear hold and enforce count.
-  const toggleTableId = (id) => {
-    clearHold();
-    setSelectedTableIds((prev) => {
-      const has = prev.includes(id);
-      const next = has ? prev.filter((x) => x !== id) : [...prev, id];
-      return next;
-    });
+  const normalizeIds = (rawIds) => {
+    return [...rawIds]
+      .map(Number)
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
   };
 
-  // 3) Keep selection valid when availability changes (e.g. refresh).
+  const autoPickTables = (ids, count) => ids.slice(0, count);
+
+  const fetchAvailableTableIds = useCallback(async () => {
+    const { start_time, end_time } = buildDateTimes();
+    const res = await tableAvailability({ start_time, end_time });
+    const ids = Array.isArray(res?.available_table_ids) ? res.available_table_ids : [];
+    return normalizeIds(ids);
+    // buildDateTimes uses reservationInfo; keep deps on the effect below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reservationInfo.reservationDate, reservationInfo.startTime, reservationInfo.endTime]);
+
+  const loadAvailability = useCallback(async () => {
+    setError("");
+    setAvailabilityLoading(true);
+
+    try {
+      const ids = await fetchAvailableTableIds();
+
+      setAvailableTableIds(ids);
+      // Auto-select tables based on guest amount rule (requiredTableCount)
+      const autoSelected = autoPickTables(ids, requiredTableCount);
+      setSelectedTableIds(autoSelected);
+
+      if (ids.length === 0) {
+        setError("No tables available for the selected time.");
+      } else if (ids.length < requiredTableCount) {
+        setError(
+          `Not enough tables available for ${reservationInfo.partySize} guest(s) at the selected time.`
+        );
+      }
+    } catch (e) {
+      setError("Failed to load available tables.");
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  }, [fetchAvailableTableIds, requiredTableCount, reservationInfo.partySize]);
+
+  // 1) Availability fetch whenever date/time changes.
+  useEffect(() => {
+    loadAvailability();
+  }, [loadAvailability]);
+
+  // 2) Keep selection valid when availability changes (e.g. refresh).
   useEffect(() => {
     setSelectedTableIds((prev) => {
       const setAvail = new Set(availableTableIds);
@@ -255,8 +253,6 @@ export default function Reservation() {
         setPeopleCount={setPeopleCount}
         requiredTableCount={requiredTableCount}
         availableTableIds={availableTableIds}
-        selectedTableIds={selectedTableIds}
-        toggleTableId={toggleTableId}
         availabilityLoading={availabilityLoading}
         error={error}
       />

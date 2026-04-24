@@ -79,8 +79,6 @@ export function GuestsTab({
   setPeopleCount,
   requiredTableCount,
   availableTableIds,
-  selectedTableIds,
-  toggleTableId,
   availabilityLoading,
   error,
 }) {
@@ -102,26 +100,6 @@ export function GuestsTab({
               Available table IDs:{" "}
               {availableTableIds.length ? availableTableIds.join(", ") : "none"}
             </p>
-            <p>
-              Selected table IDs:{" "}
-              {selectedTableIds.length ? selectedTableIds.join(", ") : "none"}
-            </p>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {availableTableIds.map((id) => {
-                const checked = selectedTableIds.includes(id);
-                return (
-                  <label key={id} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleTableId(id)}
-                    />
-                    {id}
-                  </label>
-                );
-              })}
-            </div>
           </>
         )}
 
