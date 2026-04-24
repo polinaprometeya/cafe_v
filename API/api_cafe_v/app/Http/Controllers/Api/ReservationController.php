@@ -9,7 +9,9 @@ use App\Http\Requests\ReservationRequest;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
-use App\Services\ReservationCreator;
+use App\Services\ReservationService;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class ReservationController extends Controller
@@ -57,7 +59,7 @@ class ReservationController extends Controller
         $data = $request->validated();
 
         try {
-            $reservation = app(ReservationCreator::class)->create($data);
+            $reservation = app(ReservationService::class)->create($data);
         } catch (RuntimeException $e) {
             $message = $e->getMessage();
 
@@ -77,6 +79,41 @@ class ReservationController extends Controller
         }
 
         return $reservation;
+    }
+
+    public function hold(ReservationRequest $request)
+    {
+        $data = $request->validated();
+
+        $tableIdsJson = json_encode($data['table_ids'], JSON_THROW_ON_ERROR);
+        $ttlSeconds = $data['ttl_seconds'] ?? 300;
+
+        try {
+            $result = DB::select('CALL sp_create_hold(?, ?, ?, ?, ?)', [
+                $data['start_time'],
+                $data['end_time'],
+                $data['guests_amount'],
+                $tableIdsJson,
+                $ttlSeconds,
+            ]);
+        } catch (QueryException $e) {
+            $msg = $e->getMessage();
+
+            if (str_contains($msg, 'TABLES_NOT_AVAILABLE')) {
+                return response()->json([
+                    'message' => 'Some selected tables are not available for the requested time.',
+                ], 422);
+            }
+
+            throw $e;
+        }
+
+        $row = $result[0] ?? null;
+
+        return response()->json([
+            'hold_id' => $row->hold_id ?? null,
+            'expires_at' => $row->expires_at ?? null,
+        ]);
     }
 
     /**

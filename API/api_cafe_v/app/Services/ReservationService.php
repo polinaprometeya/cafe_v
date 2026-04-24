@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
-class ReservationCreator
+class ReservationService
 {
     /**
      * @param array{
@@ -36,9 +36,8 @@ class ReservationCreator
         $start = $reservationData['start_time'];
         $end = $reservationData['end_time'];
 
-        // Option A (current): Do it in Laravel with an overlap query.
-        // Option B (learning): Replace this whole block with a MySQL stored procedure call.
-
+  
+        //Do any of these table_ids already have a reservation whose time window overlaps my requested
         return DB::transaction(function () use ($reservationData, $tableIds, $start, $end) {
             $unavailableTableIds = $this->getUnavailableTableIds($tableIds, $start, $end);
 
@@ -60,6 +59,7 @@ class ReservationCreator
      */
     private function getUnavailableTableIds(array $tableIds, string $start, string $end)
     {
+            //List of booked tables
         return Table::query()
             ->whereIn('id', $tableIds)
             ->whereHas('reservations', function ($q) use ($start, $end) {

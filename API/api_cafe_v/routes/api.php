@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 
 Route::apiResource('reservation', ReservationController::class);
 
+Route::post('reservation-holds', [ReservationController::class, 'hold']);
+
 Route::post('tables/availability', [TableController::class, 'availability']);
 
 Route::apiResource('category', CategoryController::class);
