@@ -255,6 +255,7 @@ export default function Reservation() {
         availableTableIds={availableTableIds}
         availabilityLoading={availabilityLoading}
         error={error}
+        goToNextTab={() => setSelectedHeaderTopic("reservation")}
       />
     ),
     reservation: (

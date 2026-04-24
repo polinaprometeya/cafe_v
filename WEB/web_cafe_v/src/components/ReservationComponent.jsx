@@ -81,6 +81,7 @@ export function GuestsTab({
   availableTableIds,
   availabilityLoading,
   error,
+  goToNextTab,
 }) {
   return (
     <>
@@ -104,6 +105,15 @@ export function GuestsTab({
         )}
 
         {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+
+        <div style={{ height: 12 }} />
+        <button
+          type="button"
+          onClick={() => goToNextTab?.()}
+          disabled={availabilityLoading || !!error}
+        >
+          Next
+        </button>
       </div>
     </>
   );
