@@ -23,12 +23,11 @@ class TableAvailabilityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => 'required|date',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'guests_amount' => 'required|integer|min:1|max:8',
-            'table_ids' => 'required|array|min:1',
-            'table_ids.*' => 'integer|exists:tables,id',
+            // optional: frontend can send it if it wants,
+            // but availability calculation is time-based.
+            'guests_amount' => 'sometimes|integer|min:1|max:8',
         ];
     }
 }

@@ -15,3 +15,18 @@ export const createReservation = async (payload) => {
     });
 }
 
+//Table Availability 
+
+export const holdReservation = async (payload) => {
+    return api.apiRequest('/reservation-holds', {
+        method: 'POST',
+        body: payload,
+    });
+}
+
+export const tableAvailability = async (payload) => {
+    return api.apiRequest('/tables/availability', {
+        method: 'POST',
+        body: payload,
+    });
+}

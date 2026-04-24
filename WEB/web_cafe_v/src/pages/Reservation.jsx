@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
-import { createReservation } from "../service/routes";
+import { createReservation, holdReservation, tableAvailability } from "../service/routes";
 import {
   DateTimeTab,
   DetailsTab,
@@ -52,12 +52,19 @@ export default function Reservation() {
     e.preventDefault();
     if (isLoading) return;
 
+    const reservationDate = DateFormatterYYYYMMDD(reservationInfo.reservationDate); // "YYYY-MM-DD"
+    const startTime = TimeFormatterHHMM(reservationInfo.startTime); // "HH:MM"
+    const endTime = TimeFormatterHHMM(reservationInfo.endTime); // "HH:MM"
+
+    // Option A (best practice): send canonical datetimes to the API
     const payload = {
-      ...reservationInfo,
-      reservationDate: DateFormatterYYYYMMDD(reservationInfo.reservationDate),
-      startTime: TimeFormatterHHMM(reservationInfo.startTime),
-      endTime: TimeFormatterHHMM(reservationInfo.endTime),
-      phoneNumber: String(reservationInfo.phoneNumber),
+      guests_amount: reservationInfo.partySize,
+      date: `${reservationDate} 00:00:00`,
+      start_time: `${reservationDate} ${startTime}:00`,
+      end_time: `${reservationDate} ${endTime}:00`,
+      reservation_name: reservationInfo.reservee,
+      reservation_number: String(reservationInfo.phoneNumber),
+      // table_ids: [ ... ]  // will be added once the UI selects / auto-assigns tables
     };
 
     try {
