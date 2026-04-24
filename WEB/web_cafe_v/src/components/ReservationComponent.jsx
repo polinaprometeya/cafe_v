@@ -74,19 +74,96 @@ export function DateTimeTab({ reservationInfo, setDate, setTime }) {
   );
 }
 
-export function GuestsTab({ reservationInfo, setPeopleCount }) {
+export function GuestsTab({
+  reservationInfo,
+  setPeopleCount,
+  requiredTableCount,
+  availableTableIds,
+  selectedTableIds,
+  toggleTableId,
+  availabilityLoading,
+  error,
+}) {
   return (
-    <ClampedCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
+    <>
+      <ClampedCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
+
+      <div style={{ height: 12 }} />
+
+      <div>
+        <p>
+          Tables needed: <strong>{requiredTableCount}</strong>
+        </p>
+        {availabilityLoading ? (
+          <p>Loading available tables...</p>
+        ) : (
+          <>
+            <p>
+              Available table IDs:{" "}
+              {availableTableIds.length ? availableTableIds.join(", ") : "none"}
+            </p>
+            <p>
+              Selected table IDs:{" "}
+              {selectedTableIds.length ? selectedTableIds.join(", ") : "none"}
+            </p>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {availableTableIds.map((id) => {
+                const checked = selectedTableIds.includes(id);
+                return (
+                  <label key={id} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleTableId(id)}
+                    />
+                    {id}
+                  </label>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      </div>
+    </>
   );
 }
 
-export function DetailsTab({ reservationInfo, updateField, handleSubmit, isLoading }) {
+export function DetailsTab({ reservationInfo, updateField, handleSubmit, handleHold, hold, holdSecondsLeft, requiredTableCount, selectedTableIds, availabilityLoading, holdLoading, error, isLoading }) {
   return (
-    <ReservationForm
-      reservationInfo={reservationInfo}
-      updateField={updateField}
-      onSubmit={handleSubmit}
-      isDisabled={isLoading}
-    />
+    <>
+      <div style={{ marginBottom: 12 }}>
+        <p>
+          Selected table IDs:{" "}
+          {selectedTableIds.length ? selectedTableIds.join(", ") : "none"} (need{" "}
+          {requiredTableCount})
+        </p>
+        <button
+          type="button"
+          onClick={handleHold}
+          disabled={availabilityLoading || holdLoading}
+        >
+          {holdLoading ? "Holding..." : "Hold tables"}
+        </button>
+        {hold?.holdId ? (
+          <p>
+            Hold active: <strong>{hold.holdId}</strong>
+            {typeof holdSecondsLeft === "number" ? ` (expires in ${holdSecondsLeft}s)` : ""}
+          </p>
+        ) : (
+          <p>No active hold.</p>
+        )}
+        {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      </div>
+
+      <ReservationForm
+        reservationInfo={reservationInfo}
+        updateField={updateField}
+        onSubmit={handleSubmit}
+        isDisabled={isLoading || !hold?.holdId}
+      />
+    </>
   );
 }
