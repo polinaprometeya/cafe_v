@@ -10,6 +10,14 @@ export function ReservationForm({
   onSubmit,
   isDisabled,
 }) {
+  /**
+   * This is the "Details" form.
+   * It does NOT choose tables. Table choice/hold happens in `Reservation.jsx`.
+   *
+   * `isDisabled` is used to:
+   * - prevent duplicate submits
+   * - ensure user can't submit without an active hold
+   */
   return (
     <form className="Form" onSubmit={onSubmit}>
       <input
@@ -65,6 +73,10 @@ export function ReservationForm({
 }
 
 export function DateTimeTab({ reservationInfo, setDate, setTime }) {
+  /**
+   * Date + Time UI controls.
+   * We keep the state as Date objects for UX, and compose server datetimes later.
+   */
   return (
     <>
       <DateSelector selectedDate={reservationInfo.reservationDate} updateDate={setDate} />
@@ -83,6 +95,12 @@ export function GuestsTab({
   error,
   goToNextTab,
 }) {
+  /**
+   * Guests tab:
+   * - user picks party size
+   * - we show how many tables the rule needs
+   * - we show which table IDs are available (IDs only)
+   */
   return (
     <>
       <ClampedCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
@@ -119,7 +137,13 @@ export function GuestsTab({
   );
 }
 
-export function DetailsTab({ reservationInfo, updateField, handleSubmit, handleHold, hold, holdSecondsLeft, requiredTableCount, selectedTableIds, availabilityLoading, holdLoading, error, isLoading }) {
+export function DetailsTab({ reservationInfo, updateField, handleSubmit, hold, holdSecondsLeft, requiredTableCount, selectedTableIds, availabilityLoading, holdLoading, error, isLoading }) {
+  /**
+   * Details tab:
+   * - shows selected table IDs (auto-picked)
+   * - shows hold state (auto-created when entering this tab)
+   * - enables submit only when hold exists
+   */
   return (
     <>
       <div style={{ marginBottom: 12 }}>
@@ -128,20 +152,13 @@ export function DetailsTab({ reservationInfo, updateField, handleSubmit, handleH
           {selectedTableIds.length ? selectedTableIds.join(", ") : "none"} (need{" "}
           {requiredTableCount})
         </p>
-        <button
-          type="button"
-          onClick={handleHold}
-          disabled={availabilityLoading || holdLoading}
-        >
-          {holdLoading ? "Holding..." : "Hold tables"}
-        </button>
         {hold?.holdId ? (
           <p>
             Hold active: <strong>{hold.holdId}</strong>
             {typeof holdSecondsLeft === "number" ? ` (expires in ${holdSecondsLeft}s)` : ""}
           </p>
         ) : (
-          <p>No active hold.</p>
+          <p>{holdLoading ? "Holding tables..." : "No active hold."}</p>
         )}
         {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
       </div>

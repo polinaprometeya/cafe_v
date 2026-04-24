@@ -1,12 +1,15 @@
 import api from "./api";
 
-//Read 
+/**
+ * API route helpers.
+ *
+ * These functions document the backend contract in one place.
+ * Keep them thin: payload mapping happens in the page components.
+ */
 
 export const getMenuByCategory = () => api.apiRequest("/category");
 
-//RESERVATION CRUD
-
-//export const getReservations = () => api.apiRequest("/reservation");
+// Reservation create (final step)
 
 export const createReservation = async (payload) => {
     return api.apiRequest('/reservation', {
@@ -15,7 +18,7 @@ export const createReservation = async (payload) => {
     });
 }
 
-//Table Availability 
+// Reservation hold (temporary lock) - calls stored procedure on backend
 
 export const holdReservation = async (payload) => {
     return api.apiRequest('/reservation-holds', {
@@ -24,6 +27,7 @@ export const holdReservation = async (payload) => {
     });
 }
 
+// Availability check - returns available table IDs
 export const tableAvailability = async (payload) => {
     return api.apiRequest('/tables/availability', {
         method: 'POST',

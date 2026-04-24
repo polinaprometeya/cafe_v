@@ -1,14 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
 import { createReservation, holdReservation, tableAvailability } from "../service/routes";
-import {
-  DateTimeTab,
-  DetailsTab,
-  GuestsTab,
-} from "../components/ReservationComponent";
+import * as ReservationComponents from "../components/ReservationComponent";
 import "./Page.css";
 
 export default function Reservation() {
+  /**
+   * Reservation page (frontend state machine)
+   *
+   * UX: user picks date/time -> picks guest amount -> enters details -> submits
+   *
+   * Backend contract (important):
+   * - `/tables/availability` expects canonical datetimes: { start_time, end_time }
+   *   and returns: { available_table_ids: number[] }
+   * - `/reservation-holds` expects: { start_time, end_time, guests_amount, table_ids, ttl_seconds? }
+   *   and returns: { hold_id, expires_at }
+   * - `/reservation` expects: { guests_amount, date, start_time, end_time, reservation_name, reservation_number, table_ids }
+   *
+   * Best practice used here:
+   * - Keep Date/Time separate in UI state (Date objects)
+   * - Convert to canonical datetime strings only at the API boundary
+   */
   const [selectedHeaderTopic, setSelectedHeaderTopic] = useState("date");
   const [isLoading, setIsLoading] = useState(false);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
@@ -34,6 +46,7 @@ export default function Reservation() {
   const [selectedTableIds, setSelectedTableIds] = useState([]);
   const [hold, setHold] = useState(null); // { holdId, expiresAt }
   const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
+  const autoHoldAttemptedKeyRef = useRef(null); // prevents repeated auto-hold for same inputs (per page load)
 
   const updateField = (field, value) => {
     setReservationInfo((prev) => ({
@@ -48,10 +61,7 @@ export default function Reservation() {
     return Math.ceil(reservationInfo.partySize / 2);
   }, [reservationInfo.partySize]);
 
-  const clearHold = () => {
-    setHold(null);
-    setHoldSecondsLeft(null);
-  };
+  const clearHold = () => { setHold(null); setHoldSecondsLeft(null); };
 
   const setPeopleCount = (partySize) => {
     updateField("partySize", partySize);
@@ -72,83 +82,66 @@ export default function Reservation() {
     clearHold();
   };
 
-  const buildDateTimes = () => {
-    const reservationDate = DateFormatterYYYYMMDD(reservationInfo.reservationDate); // "YYYY-MM-DD"
-    const startTime = TimeFormatterHHMM(reservationInfo.startTime); // "HH:MM"
-    const endTime = TimeFormatterHHMM(reservationInfo.endTime); // "HH:MM"
+  const reservationDateStr = useMemo(
+    () => DateFormatterYYYYMMDD(reservationInfo.reservationDate), // "YYYY-MM-DD"
+    [reservationInfo.reservationDate]
+  );
+  const startTimeStr = useMemo(
+    () => TimeFormatterHHMM(reservationInfo.startTime), // "HH:MM"
+    [reservationInfo.startTime]
+  );
+  const endTimeStr = useMemo(
+    () => TimeFormatterHHMM(reservationInfo.endTime), // "HH:MM"
+    [reservationInfo.endTime]
+  );
 
-    return {
-      date: `${reservationDate} 00:00:00`,
-      start_time: `${reservationDate} ${startTime}:00`,
-      end_time: `${reservationDate} ${endTime}:00`,
-    };
-  };
+  const start_time = `${reservationDateStr} ${startTimeStr}:00`;
+  const end_time = `${reservationDateStr} ${endTimeStr}:00`;
+  const date = `${reservationDateStr} 00:00:00`;
 
-  const normalizeIds = (rawIds) => {
-    return [...rawIds]
-      .map(Number)
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => a - b);
-  };
+  // 1) Availability fetch whenever date/time/guests changes.
+  useEffect(() => {
+    let cancelled = false;
 
-  const autoPickTables = (ids, count) => ids.slice(0, count);
+    (async () => {
+      /**
+       * Step 1: ask backend which tables are available for the requested time window.
+       * We only need IDs, because selection is automatic (no manual picking).
+       */
+      setError("");
+      setAvailabilityLoading(true);
 
-  const fetchAvailableTableIds = useCallback(async () => {
-    const { start_time, end_time } = buildDateTimes();
-    const res = await tableAvailability({ start_time, end_time });
-    const ids = Array.isArray(res?.available_table_ids) ? res.available_table_ids : [];
-    return normalizeIds(ids);
-    // buildDateTimes uses reservationInfo; keep deps on the effect below
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reservationInfo.reservationDate, reservationInfo.startTime, reservationInfo.endTime]);
+      try {
+        const res = await tableAvailability({ start_time, end_time });
+        if (cancelled) return;
 
-  const loadAvailability = useCallback(async () => {
-    setError("");
-    setAvailabilityLoading(true);
+        const rawIds = Array.isArray(res?.available_table_ids) ? res.available_table_ids : [];
+        const ids = rawIds
+          .map(Number)
+          .filter((n) => Number.isFinite(n))
+          .sort((a, b) => a - b);
 
-    try {
-      const ids = await fetchAvailableTableIds();
+        setAvailableTableIds(ids);
+        setSelectedTableIds(ids.slice(0, requiredTableCount));
 
-      setAvailableTableIds(ids);
-      // Auto-select tables based on guest amount rule (requiredTableCount)
-      const autoSelected = autoPickTables(ids, requiredTableCount);
-      setSelectedTableIds(autoSelected);
+        // Availability changed => the old hold (if any) is no longer valid.
+        clearHold();
+        autoHoldAttemptedKeyRef.current = null;
 
-      if (ids.length === 0) {
-        setError("No tables available for the selected time.");
-      } else if (ids.length < requiredTableCount) {
-        setError(
-          `Not enough tables available for ${reservationInfo.partySize} guest(s) at the selected time.`
-        );
+        if (ids.length === 0) {
+          setError("No tables available for the selected time.");
+        } else if (ids.length < requiredTableCount) {
+          setError(`Not enough tables available for ${reservationInfo.partySize} guest(s).`);
+        }
+      } catch {
+        if (!cancelled) setError("Failed to load available tables.");
+      } finally {
+        if (!cancelled) setAvailabilityLoading(false);
       }
-    } catch (e) {
-      setError("Failed to load available tables.");
-    } finally {
-      setAvailabilityLoading(false);
-    }
-  }, [fetchAvailableTableIds, requiredTableCount, reservationInfo.partySize]);
+    })();
 
-  // 1) Availability fetch whenever date/time changes.
-  useEffect(() => {
-    loadAvailability();
-  }, [loadAvailability]);
-
-  // 2) Keep selection valid when availability changes (e.g. refresh).
-  useEffect(() => {
-    setSelectedTableIds((prev) => {
-      const setAvail = new Set(availableTableIds);
-      const filtered = prev.filter((id) => setAvail.has(id));
-      const padded =
-        filtered.length >= requiredTableCount
-          ? filtered.slice(0, requiredTableCount)
-          : [...filtered, ...availableTableIds.filter((id) => !filtered.includes(id)).slice(0, requiredTableCount - filtered.length)];
-
-      return padded;
-    });
-    // availability change should invalidate hold too
-    clearHold();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableTableIds, requiredTableCount]);
+    return () => { cancelled = true; };
+  }, [start_time, end_time, requiredTableCount, reservationInfo.partySize]);
 
   // 4) Hold countdown UI
   useEffect(() => {
@@ -171,46 +164,67 @@ export default function Reservation() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hold?.expiresAt]);
 
-  const handleHold = async () => {
-    if (holdLoading || availabilityLoading) return;
-    setError("");
+  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
 
-    if (selectedTableIds.length !== requiredTableCount) {
-      setError(`Please select exactly ${requiredTableCount} table(s).`);
-      return;
-    }
+  // Auto-hold when user reaches the Details tab.
+  useEffect(() => {
+    /**
+     * Step 2: create a temporary hold (server-side) so tables aren't booked
+     * by someone else while the user fills in the form.
+     *
+     * This is NOT a DB lock held open for minutes. It's a record with TTL.
+     */
+    if (selectedHeaderTopic !== "reservation") return;
+    if (availabilityLoading || holdLoading) return;
+    if (hold?.holdId) return;
+    if (selectedTableIds.length !== requiredTableCount) return;
+    if (error) return;
 
-    try {
-      setHoldLoading(true);
-      const { start_time, end_time } = buildDateTimes();
+    // Try at most once per input set to avoid loops.
+    if (autoHoldAttemptedKeyRef.current === holdKey) return;
+    autoHoldAttemptedKeyRef.current = holdKey;
 
-      const res = await holdReservation({
-        start_time,
-        end_time,
-        guests_amount: reservationInfo.partySize,
-        table_ids: selectedTableIds,
-        ttl_seconds: 300,
-      });
-
-      setHold({
-        holdId: res?.hold_id ?? null,
-        expiresAt: res?.expires_at ?? null,
-      });
-    } catch (e) {
-      // on 422, refresh availability and force reselect
-      setError("Could not hold tables. Please try again.");
+    (async () => {
       try {
-        const { start_time, end_time } = buildDateTimes();
-        const refresh = await tableAvailability({ start_time, end_time });
-        const ids = Array.isArray(refresh?.available_table_ids) ? refresh.available_table_ids : [];
-        setAvailableTableIds([...ids].map(Number).filter((n) => Number.isFinite(n)).sort((a, b) => a - b));
+        setHoldLoading(true);
+        const res = await holdReservation({
+          start_time,
+          end_time,
+          guests_amount: reservationInfo.partySize,
+          table_ids: selectedTableIds,
+          ttl_seconds: 300,
+        });
+
+        const holdId = res?.hold_id ?? null;
+        const expiresAt = res?.expires_at ?? null;
+
+        if (!holdId || !expiresAt) {
+          clearHold();
+          // This usually means backend returned a different shape than expected.
+          setError("Hold request succeeded, but response did not include hold_id/expires_at.");
+          return;
+        }
+
+        setHold({ holdId, expiresAt });
       } catch {
-        // ignore refresh errors
+        setError("Could not hold tables. Please try again.");
+      } finally {
+        setHoldLoading(false);
       }
-    } finally {
-      setHoldLoading(false);
-    }
-  };
+    })();
+  }, [
+    selectedHeaderTopic,
+    availabilityLoading,
+    holdLoading,
+    hold?.holdId,
+    requiredTableCount,
+    selectedTableIds,
+    holdKey,
+    error,
+    start_time,
+    end_time,
+    reservationInfo.partySize,
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,8 +234,11 @@ export default function Reservation() {
       return;
     }
 
-    const { date, start_time, end_time } = buildDateTimes();
-
+    /**
+     * Step 3: final reservation create.
+     * Backend re-checks availability, so even if the hold failed/expired,
+     * it will not silently create an invalid reservation.
+     */
     const payload = {
       guests_amount: reservationInfo.partySize,
       date,
@@ -242,13 +259,13 @@ export default function Reservation() {
 
   const tabs = {
     date: (
-      <DateTimeTab 
+      <ReservationComponents.DateTimeTab 
         reservationInfo={reservationInfo} 
         setDate={setDate} 
         setTime={setTime} />
     ),
     guests: (
-      <GuestsTab 
+      <ReservationComponents.GuestsTab 
         reservationInfo={reservationInfo} 
         setPeopleCount={setPeopleCount}
         requiredTableCount={requiredTableCount}
@@ -259,11 +276,10 @@ export default function Reservation() {
       />
     ),
     reservation: (
-      <DetailsTab
+      <ReservationComponents.DetailsTab
         reservationInfo={reservationInfo}
         updateField={updateField}
         handleSubmit={handleSubmit}
-        handleHold={handleHold}
         hold={hold}
         holdSecondsLeft={holdSecondsLeft}
         requiredTableCount={requiredTableCount}

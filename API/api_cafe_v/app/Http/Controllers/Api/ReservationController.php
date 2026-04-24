@@ -116,10 +116,34 @@ class ReservationController extends Controller
         }
 
         $row = $result[0] ?? null;
+        $rowArr = is_object($row) ? (array) $row : (is_array($row) ? $row : []);
+        $rowArrLower = array_change_key_case($rowArr, CASE_LOWER);
+
+        // Stored procedure should ideally return: hold_id, expires_at
+        // but we handle common alias/case variations to avoid frontend confusion.
+        $holdId = $rowArrLower['hold_id']
+            ?? $rowArrLower['holdid']
+            ?? $rowArrLower['id']
+            ?? $rowArrLower['v_hold_id']
+            ?? $rowArrLower['reservation_id']
+            ?? null;
+
+        $expiresAt = $rowArrLower['expires_at']
+            ?? $rowArrLower['expiresat']
+            ?? $rowArrLower['expires']
+            ?? $rowArrLower['v_expires_at']
+            ?? null;
+
+        if ($holdId === null || $expiresAt === null) {
+            return response()->json([
+                'message' => 'Hold was created, but API could not read hold_id/expires_at from stored procedure result.',
+                'returned_columns' => array_keys($rowArrLower),
+            ], 500);
+        }
 
         return response()->json([
-            'hold_id' => $row->hold_id ?? null,
-            'expires_at' => $row->expires_at ?? null,
+            'hold_id' => $holdId,
+            'expires_at' => $expiresAt,
         ]);
     }
 
