@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TableAvailabilityRequest;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TableController extends Controller
 {
@@ -76,6 +77,16 @@ class TableController extends Controller
                 // overlap condition: existing.start < requested.end AND existing.end > requested.start
                 $q->where('start_time', '<', $end)
                     ->where('end_time', '>', $start);
+            })
+            // Exclude tables that are currently held (unexpired holds) and overlap the requested window.
+            ->whereNotExists(function ($q) use ($start, $end) {
+                $q->select(DB::raw(1))
+                    ->from('reservation_hold_tables as ht')
+                    ->join('reservation_holds as h', 'h.id', '=', 'ht.hold_id')
+                    ->whereColumn('ht.table_id', 'tables.id')
+                    ->where('h.expires_at', '>', DB::raw('NOW()'))
+                    ->where('h.start_time', '<', $end)
+                    ->where('h.end_time', '>', $start);
             })
             ->pluck('id')
             ->values();

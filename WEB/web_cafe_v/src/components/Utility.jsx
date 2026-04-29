@@ -151,3 +151,31 @@ export const normalizeTableIds = (rawIds) => {
       .sort((a, b) => a - b);
     return ids;
   };
+
+/**
+ * Hold expiry helpers (backend may return multiple formats).
+ *
+ * - `expiresAtEpoch`: unix timestamp in seconds (best)
+ * - `expiresAtIso`: ISO 8601 string (good)
+ * - `expiresAt`: "YYYY-MM-DD HH:MM:SS" (fallback; normalize to "YYYY-MM-DDTHH:MM:SS")
+ */
+export function getExpiresMs({ expiresAt, expiresAtIso, expiresAtEpoch }) {
+  if (typeof expiresAtEpoch === "number" && Number.isFinite(expiresAtEpoch)) {
+    return expiresAtEpoch * 1000;
+  }
+
+  const raw = expiresAtIso ?? expiresAt ?? null;
+  if (!raw) return null;
+
+  const ms = new Date(String(raw).replace(" ", "T")).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+export function formatHoldExpiry({ expiresAt, expiresAtIso, expiresAtEpoch }) {
+  const expiresMs = getExpiresMs({ expiresAt, expiresAtIso, expiresAtEpoch });
+  if (expiresMs === null) return "unknown expiry";
+
+  const local = new Date(expiresMs).toLocaleString();
+  const epoch = Math.floor(expiresMs / 1000);
+  return `${local} (epoch ${epoch})`;
+}

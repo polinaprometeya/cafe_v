@@ -165,10 +165,15 @@ class ReservationController extends Controller
             ], 500);
         }
 
+        $expires = Carbon::parse($expiresAt);
+
         //success
         return response()->json([
             'hold_id' => $holdId,
+            // Keep the original string for readability, but also return an unambiguous timestamp.
             'expires_at' => $expiresAt,
+            'expires_at_iso' => $expires->toIso8601String(),
+            'expires_at_epoch' => $expires->getTimestamp(),
         ]);
     }
 

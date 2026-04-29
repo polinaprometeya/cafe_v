@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DateFormatterYYYYMMDD, TimeFormatterHHMM , normalizeTableIds} from "../components/Utility";
+import {
+  DateFormatterYYYYMMDD,
+  getExpiresMs,
+  normalizeTableIds,
+  TimeFormatterHHMM,
+} from "../components/Utility";
 import {
   createReservation,
   holdReservation,
@@ -34,7 +39,7 @@ export default function Reservation() {
   const [error, setError] = useState(""); //I like error management, a string instead of a toast. Maybe I will make a toast
   const [availableTableIds, setAvailableTableIds] = useState([]); //array with avaible table IDs
   const [selectedTableIds, setSelectedTableIds] = useState([]);  //array with selected table IDs --> the first “adjacent” tables
-  const [hold, setHold] = useState(null); // { holdId, expiresAt }  might need to rename this values
+  const [hold, setHold] = useState(null); // { holdId, expiresAt }  
   const [holdSecondsLeft, setHoldSecondsLeft] = useState(null); //It is uneccery but hey.. Countdown is okay
   const availabilityRequestIdRef = useRef(0); //useRef doesn’t trigger re-renders, I could have used session I think
   const lastHoldKeyRef = useRef(null); // prevents duplicate hold requests for same inputs
@@ -136,13 +141,18 @@ export default function Reservation() {
 
       const holdId = res?.hold_id ?? null;
       const expiresAt = res?.expires_at ?? null;
+      const expiresAtIso = res?.expires_at_iso ?? null;
+      const expiresAtEpoch = res?.expires_at_epoch ?? null;
+
+      //sanity check
       if (!holdId || !expiresAt) {
         clearHold();
         setError("Hold request succeeded, but response did not include hold_id/expires_at.");
         return null;
       }
 
-      setHold({ holdId, expiresAt });
+      setHold({ holdId, expiresAt, expiresAtIso, expiresAtEpoch });
+      
       return { holdId, expiresAt };
     } catch {
       setError("Could not hold tables. Please try again.");
@@ -155,7 +165,7 @@ export default function Reservation() {
   const setPeopleCount = (partySize) => {
     updateField("partySize", partySize);
     void releaseHoldIfAny();
-    lastHoldKeyRef.current = null;
+    lastHoldKeyRef.current = null; // the hold needs to be reset so..
   };
 
   const setTime = (startTime) => {
@@ -245,10 +255,12 @@ export default function Reservation() {
 
   // Hold countdown UI
   useEffect(() => {
-    if (!hold?.expiresAt) return;
+    const expiresMsInitial = getExpiresMs(hold ?? {});
+    if (expiresMsInitial === null) return;
 
     const tick = () => {
-      const expiresMs = new Date(hold.expiresAt).getTime();
+      const expiresMs = getExpiresMs(hold ?? {});
+      if (expiresMs === null) return;
       const nowMs = Date.now();
       const seconds = Math.max(0, Math.floor((expiresMs - nowMs) / 1000));
       setHoldSecondsLeft(seconds);
@@ -261,8 +273,7 @@ export default function Reservation() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hold?.expiresAt]);
+  }, [hold]);
 
 
   const handleSubmit = async (e) => {
