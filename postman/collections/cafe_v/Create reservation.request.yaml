@@ -1,5 +1,5 @@
 $kind: http-request
-name: New Request
+name: Create reservation
 url: " http://127.0.0.1:8000/api/reservation"
 method: POST
 headers:

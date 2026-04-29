@@ -119,8 +119,8 @@ class ReservationController extends Controller
         $rowArr = is_object($row) ? (array) $row : (is_array($row) ? $row : []);
         $rowArrLower = array_change_key_case($rowArr, CASE_LOWER);
 
-        // Stored procedure should ideally return: hold_id, expires_at
-        // but we handle common alias/case variations to avoid frontend confusion.
+        // Stored procedure should return: hold_id, expires_at
+        // it is easier to handle common alias/cases to avoid frontend confusion.
         $holdId = $rowArrLower['hold_id']
             ?? $rowArrLower['holdid']
             ?? $rowArrLower['id']

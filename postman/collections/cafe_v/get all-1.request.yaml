@@ -1,5 +1,0 @@
-$kind: http-request
-name: get all
-url: http://127.0.0.1:8000/api/menu
-method: GET
-order: 1747319730462327
