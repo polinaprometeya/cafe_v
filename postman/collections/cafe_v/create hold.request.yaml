@@ -1,0 +1,17 @@
+$kind: http-request
+name: create hold
+url: " http://127.0.0.1:8000/api/reservation-holds "
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: json
+  content: |-
+    {
+      "start_time": "2026-05-02 18:00:00",
+      "end_time": "2026-05-02 20:00:00",
+      "guests_amount": 4,
+      "table_ids": [1, 2],
+      "ttl_seconds": 300
+    }
+order: 3972612153964195

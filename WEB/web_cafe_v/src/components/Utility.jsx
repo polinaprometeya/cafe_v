@@ -1,16 +1,20 @@
+//random number 
 export function RandomNumber() {
     var randomNumber = Math.floor(Math.random());
     return randomNumber;
   }
 
+  //just standard button
 export function PlusButton(props) {
     return  <button {...props}>+</button>;
   }
 
+  //just a standard button
 export function MinusButton(props) {
     return  <button {...props}>-</button>;
   }
-  
+
+// this makes things go in circle
 export function ClampedCounter({ count, updateCount }) 
 {
     function clamp(value, min, max) 
@@ -33,6 +37,7 @@ export function ClampedCounter({ count, updateCount })
 
 }
 
+//actually creates selected date
 export function DateSelector({ selectedDate, updateDate }) {
   function toInputValue(date) {
       const d = new Date(date);
@@ -67,6 +72,7 @@ export function DateSelector({ selectedDate, updateDate }) {
 
 }
 
+//actually creates selected time
 export function TimeSelector({ selectedTime, updateTime }) {
   const hour = selectedTime.getHours();
   const quarter = Math.floor(selectedTime.getMinutes()/15);
@@ -118,6 +124,7 @@ export function TimeSelector({ selectedTime, updateTime }) {
 
 }
 
+//cleaning time format
 export function TimeFormatterHHMM(date){
     const d = new Date(date);
     const h = String(d.getHours()).padStart(2, "0");
@@ -127,6 +134,7 @@ export function TimeFormatterHHMM(date){
 
 }
 
+//cleaning date format
 export function DateFormatterYYYYMMDD(date) {
   const d = new Date(date);
   const y = d.getFullYear();
@@ -134,3 +142,12 @@ export function DateFormatterYYYYMMDD(date) {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+//cleaning Ids
+export const normalizeTableIds = (rawIds) => {
+    const ids = (Array.isArray(rawIds) ? rawIds : [])
+      .map(Number)
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+    return ids;
+  };

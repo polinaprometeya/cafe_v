@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
+import { DateFormatterYYYYMMDD, TimeFormatterHHMM , normalizeTableIds} from "../components/Utility";
 import {
   createReservation,
   holdReservation,
@@ -28,23 +28,24 @@ export default function Reservation() {
    */
 
   const [selectedHeaderTopic, setSelectedHeaderTopic] = useState("date");
-  const [isLoading, setIsLoading] = useState(false);
-  const [availabilityLoading, setAvailabilityLoading] = useState(false);
-  const [holdLoading, setHoldLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [availableTableIds, setAvailableTableIds] = useState([]);
-  const [selectedTableIds, setSelectedTableIds] = useState([]);
-  const [hold, setHold] = useState(null); // { holdId, expiresAt }
-  const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
-  const availabilityRequestIdRef = useRef(0);
+  const [isLoading, setIsLoading] = useState(false); //true while submitting final reservatio , kinda obsessive
+  const [availabilityLoading, setAvailabilityLoading] = useState(false); //true while fetching availble tables like a simp
+  const [holdLoading, setHoldLoading] = useState(false); // true while creating a hold
+  const [error, setError] = useState(""); //I like error management, a string instead of a toast. Maybe I will make a toast
+  const [availableTableIds, setAvailableTableIds] = useState([]); //array with avaible table IDs
+  const [selectedTableIds, setSelectedTableIds] = useState([]);  //array with selected table IDs --> the first “adjacent” tables
+  const [hold, setHold] = useState(null); // { holdId, expiresAt }  might need to rename this values
+  const [holdSecondsLeft, setHoldSecondsLeft] = useState(null); //It is uneccery but hey.. Countdown is okay
+  const availabilityRequestIdRef = useRef(0); //useRef doesn’t trigger re-renders, I could have used session I think
   const lastHoldKeyRef = useRef(null); // prevents duplicate hold requests for same inputs
 
   const initStartTime = new Date();
-  initStartTime.setHours(20, 0, 0, 0);
+  initStartTime.setHours(10, 0, 0, 0); //we open at 10 
   const initEndTime = new Date();
-  initEndTime.setHours(22, 0, 0, 0);
+  initEndTime.setHours(11, 0, 0, 0); //maybe should be automatic 
 
-  //create an empty reservation
+  const ttlSecondsDefault = 300; //5 min , max 900seconds
+  //create an empty reservation - form data
   const [reservationInfo, setReservationInfo] = useState({
     reservationDate: new Date(),
     startTime: initStartTime,
@@ -56,7 +57,7 @@ export default function Reservation() {
   });
 
 
-  //this updates fields runningly 
+  //this updates fields runningly , gices possability to update one at the time
   const updateField = (field, value) => {
     setReservationInfo((prev) => ({
       ...prev,
@@ -71,6 +72,7 @@ export default function Reservation() {
     return Math.ceil(reservationInfo.partySize / 2);
   }, [reservationInfo.partySize]);
 
+  //Hold helpers
   const clearHold = () => {
     setHold(null);
     setHoldSecondsLeft(null);
@@ -82,32 +84,26 @@ export default function Reservation() {
     try {
       await releaseReservationHold(holdId);
     } catch {
-      // Best-effort release.
+      // Not sure what to put here 
     } finally {
       clearHold();
     }
   };
 
-  const normalizeTableIds = (rawIds) => {
-    const ids = (Array.isArray(rawIds) ? rawIds : [])
-      .map(Number)
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => a - b);
-    return ids;
-  };
-
+  // get available tables data
   const fetchAvailability = async ({ start_time, end_time, partySize, requiredTableCount }) => {
-    const requestId = ++availabilityRequestIdRef.current;
+    const requestId = ++availabilityRequestIdRef.current; //the ++ increments the number by 1
     setError("");
     setAvailabilityLoading(true);
 
     try {
       const res = await tableAvailability({ start_time, end_time });
-      if (availabilityRequestIdRef.current !== requestId) return; // stale response
+      if (availabilityRequestIdRef.current !== requestId) return; // stale response , so the old response does not overwrite the newest data
 
+      //normalizeTableIds cleans IDs
       const ids = normalizeTableIds(res?.available_table_ids);
       setAvailableTableIds(ids);
-      setSelectedTableIds(ids.slice(0, requiredTableCount));
+      setSelectedTableIds(ids.slice(0, requiredTableCount)); //requiredTableCount --> how many tables I need
 
       // New time => old hold is invalid.
       await releaseHoldIfAny();
@@ -116,7 +112,7 @@ export default function Reservation() {
       if (ids.length === 0) {
         setError("No tables available for the selected time.");
       } else if (ids.length < requiredTableCount) {
-        setError(`Not enough tables available for ${partySize} guest(s).`);
+        setError(`Not enough tables available for ${partySize} guest(s).`); //Well this is just my toasts
       }
     } catch {
       setError("Failed to load available tables.");
@@ -125,6 +121,7 @@ export default function Reservation() {
     }
   };
 
+  //end point create hold
   const createHold = async ({ start_time, end_time, partySize, tableIds }) => {
     setError("");
     setHoldLoading(true);
@@ -134,7 +131,7 @@ export default function Reservation() {
         end_time,
         guests_amount: partySize,
         table_ids: tableIds,
-        ttl_seconds: 300,
+        ttl_seconds: ttlSecondsDefault,
       });
 
       const holdId = res?.hold_id ?? null;

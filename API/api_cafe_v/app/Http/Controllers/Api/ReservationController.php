@@ -14,6 +14,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 
 class ReservationController extends Controller
 {
@@ -141,6 +142,19 @@ class ReservationController extends Controller
         // If procedure didn't return expires_at, fetch it from DB using the hold id.
         if ($holdId !== null && $expiresAt === null) {
             $expiresAt = DB::table('reservation_holds')->where('id', $holdId)->value('expires_at');
+        }
+
+        /**
+         * Last-resort fallback:
+         * Some stored procedure versions may create the hold row but forget to set `expires_at`.
+         * If the row exists, compute expires_at from ttl and persist it.
+         */
+        if ($holdId !== null && $expiresAt === null) {
+            $exists = DB::table('reservation_holds')->where('id', $holdId)->exists();
+            if ($exists) {
+                $expiresAt = Carbon::now()->addSeconds($ttlSeconds)->toDateTimeString();
+                DB::table('reservation_holds')->where('id', $holdId)->update(['expires_at' => $expiresAt]);
+            }
         }
 
         //error handling
