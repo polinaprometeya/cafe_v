@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateFormatterYYYYMMDD, TimeFormatterHHMM } from "../components/Utility";
-import { createReservation, holdReservation, tableAvailability } from "../service/routes";
+import {
+  createReservation,
+  holdReservation,
+  releaseReservationHold,
+  tableAvailability,
+} from "../service/routes";
 import * as ReservationComponents from "../components/ReservationComponent";
 import "./Page.css";
 
@@ -30,13 +35,15 @@ export default function Reservation() {
   const [selectedTableIds, setSelectedTableIds] = useState([]);
   const [hold, setHold] = useState(null); // { holdId, expiresAt }
   const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
-  const autoHoldAttemptedKeyRef = useRef(null); // prevents repeated auto-hold for same inputs (per page load)
+  const lastAvailabilityKeyRef = useRef(null);
+  const lastHoldKeyRef = useRef(null);
 
   const initStartTime = new Date();
   initStartTime.setHours(20, 0, 0, 0);
   const initEndTime = new Date();
   initEndTime.setHours(22, 0, 0, 0);
 
+  //create an empty reservation
   const [reservationInfo, setReservationInfo] = useState({
     reservationDate: new Date(),
     startTime: initStartTime,
@@ -62,11 +69,27 @@ export default function Reservation() {
     return Math.ceil(reservationInfo.partySize / 2);
   }, [reservationInfo.partySize]);
 
-  const clearHold = () => { setHold(null); setHoldSecondsLeft(null); };
+  const clearHold = () => {
+    setHold(null);
+    setHoldSecondsLeft(null);
+  };
+
+  const releaseHoldIfAny = async () => {
+    const holdId = hold?.holdId;
+    if (!holdId) return;
+    try {
+      await releaseReservationHold(holdId);
+    } catch {
+      // Best-effort release.
+    } finally {
+      clearHold();
+    }
+  };
 
   const setPeopleCount = (partySize) => {
     updateField("partySize", partySize);
-    clearHold();
+    void releaseHoldIfAny();
+    lastHoldKeyRef.current = null;
   };
 
   const setTime = (startTime) => {
@@ -74,13 +97,17 @@ export default function Reservation() {
     endTime.setHours(endTime.getHours() + 2);
     updateField("startTime", startTime);
     updateField("endTime", endTime);
-    clearHold();
+    void releaseHoldIfAny();
+    lastAvailabilityKeyRef.current = null;
+    lastHoldKeyRef.current = null;
   };
 
   const setDate = (date) => {
     if (date === undefined) return;
     updateField("reservationDate", date);
-    clearHold();
+    void releaseHoldIfAny();
+    lastAvailabilityKeyRef.current = null;
+    lastHoldKeyRef.current = null;
   };
 
   const reservationDateStr = useMemo(
@@ -100,11 +127,23 @@ export default function Reservation() {
   const end_time = `${reservationDateStr} ${endTimeStr}:00`;
   const date = `${reservationDateStr} 00:00:00`;
 
-  // Availability fetch whenever date/time/guests changes.
+  const availabilityKey = `${start_time}|${end_time}`;
+  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(
+    ","
+  )}`;
+
+  // Availability fetch when date/time changes (and when tab is active).
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
+      const isRelevantTab =
+        selectedHeaderTopic === "date" ||
+        selectedHeaderTopic === "guests" ||
+        selectedHeaderTopic === "reservation";
+      if (!isRelevantTab) return;
+      if (lastAvailabilityKeyRef.current === availabilityKey) return;
+
       setError("");
       setAvailabilityLoading(true);
 
@@ -118,12 +157,13 @@ export default function Reservation() {
           .filter((n) => Number.isFinite(n))
           .sort((a, b) => a - b);
 
+        lastAvailabilityKeyRef.current = availabilityKey;
         setAvailableTableIds(ids);
         setSelectedTableIds(ids.slice(0, requiredTableCount));
 
         // Availability changed => the old hold (if any) is no longer valid.
         clearHold();
-        autoHoldAttemptedKeyRef.current = null;
+        lastHoldKeyRef.current = null;
 
         if (ids.length === 0) {
           setError("No tables available for the selected time.");
@@ -138,25 +178,25 @@ export default function Reservation() {
     })();
 
     return () => { cancelled = true; };
-  }, [start_time, end_time, requiredTableCount, reservationInfo.partySize]);
+  }, [
+    selectedHeaderTopic,
+    availabilityKey,
+    start_time,
+    end_time,
+    requiredTableCount,
+    reservationInfo.partySize,
+  ]);
 
-  // Auto-hold when user reaches the Details tab.
+  // Create / refresh hold on the Guests tab (and keep it for the Details tab).
   useEffect(() => {
-    /**
-      create a temporary hold (server-side) so tables aren't booked
-     * by someone else while the user fills in the form.
-     *
-     * This is NOT a DB lock held open for minutes. It's a record with TTL.
-     */
-    if (selectedHeaderTopic !== "reservation") return;
+    if (selectedHeaderTopic !== "guests") return;
     if (availabilityLoading || holdLoading) return;
     if (hold?.holdId) return;
     if (selectedTableIds.length !== requiredTableCount) return;
     if (error) return;
 
-    // Try at most once per input set to avoid loops.
-    if (autoHoldAttemptedKeyRef.current === holdKey) return;
-    autoHoldAttemptedKeyRef.current = holdKey;
+    // No-op if we already created this specific hold.
+    if (lastHoldKeyRef.current === holdKey && hold?.holdId) return;
 
     (async () => {
       try {
@@ -180,6 +220,7 @@ export default function Reservation() {
         }
 
         setHold({ holdId, expiresAt });
+        lastHoldKeyRef.current = holdKey;
       } catch {
         setError("Could not hold tables. Please try again.");
       } finally {
@@ -221,8 +262,6 @@ export default function Reservation() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hold?.expiresAt]);
 
-  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -260,7 +299,11 @@ export default function Reservation() {
       <ReservationComponents.DateTimeTab 
         reservationInfo={reservationInfo} 
         setDate={setDate} 
-        setTime={setTime} />
+        setTime={setTime}
+        availabilityLoading={availabilityLoading}
+        error={error}
+        goToNextTab={() => setSelectedHeaderTopic("guests")}
+      />
     ),
     guests: (
       <ReservationComponents.GuestsTab 
@@ -268,7 +311,11 @@ export default function Reservation() {
         setPeopleCount={setPeopleCount}
         requiredTableCount={requiredTableCount}
         availableTableIds={availableTableIds}
+        selectedTableIds={selectedTableIds}
         availabilityLoading={availabilityLoading}
+        hold={hold}
+        holdSecondsLeft={holdSecondsLeft}
+        holdLoading={holdLoading}
         error={error}
         goToNextTab={() => setSelectedHeaderTopic("reservation")}
       />

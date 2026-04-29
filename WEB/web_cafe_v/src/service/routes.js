@@ -27,6 +27,12 @@ export const holdReservation = async (payload) => {
     });
 }
 
+export const releaseReservationHold = async (holdId) => {
+    return api.apiRequest(`/reservation-holds/${holdId}`, {
+        method: 'DELETE',
+    });
+}
+
 // Availability check - returns available table IDs
 export const tableAvailability = async (payload) => {
     return api.apiRequest('/tables/availability', {

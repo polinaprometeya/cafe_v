@@ -12,6 +12,7 @@ Route::apiResource('reservation', ReservationController::class);
 
 //POST is commonly used for “search/filter” endpoints when the input is complex
 Route::post('reservation-holds', [ReservationController::class, 'hold']);
+Route::delete('reservation-holds/{hold}', [ReservationController::class, 'releaseHold']);
 
 Route::post('tables/availability', [TableController::class, 'availability']);
 

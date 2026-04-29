@@ -13,6 +13,7 @@ use App\Services\ReservationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Illuminate\Http\Response;
 
 class ReservationController extends Controller
 {
@@ -139,6 +140,23 @@ class ReservationController extends Controller
             'hold_id' => $holdId,
             'expires_at' => $expiresAt,
         ]);
+    }
+
+    public function releaseHold(int|string $hold): Response
+    {
+        /**
+         * Releases a hold early (before TTL).
+         *
+         * The tables are linked via `reservation_hold_tables` with `cascadeOnDelete()`,
+         * so deleting the hold row releases the associated table rows too.
+         */
+        $deleted = DB::table('reservation_holds')->where('id', $hold)->delete();
+
+        if ($deleted === 0) {
+            return response('', 404);
+        }
+
+        return response('', 204);
     }
 
     /**

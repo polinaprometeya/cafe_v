@@ -72,7 +72,14 @@ export function ReservationForm({
   );
 }
 
-export function DateTimeTab({ reservationInfo, setDate, setTime }) {
+export function DateTimeTab({
+  reservationInfo,
+  setDate,
+  setTime,
+  availabilityLoading,
+  error,
+  goToNextTab,
+}) {
   /**
    * Date + Time UI controls.
    * We keep the state as Date objects for UX, and compose server datetimes later.
@@ -82,6 +89,19 @@ export function DateTimeTab({ reservationInfo, setDate, setTime }) {
       <DateSelector selectedDate={reservationInfo.reservationDate} updateDate={setDate} />
       <div style={{ height: 12 }} />
       <TimeSelector selectedTime={reservationInfo.startTime} updateTime={setTime} />
+      <div style={{ height: 12 }} />
+
+      {availabilityLoading ? <p>Loading available tables...</p> : null}
+      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+
+      <div style={{ height: 12 }} />
+      <button
+        type="button"
+        onClick={() => goToNextTab?.()}
+        disabled={availabilityLoading || !!error}
+      >
+        Next
+      </button>
     </>
   );
 }
@@ -91,7 +111,11 @@ export function GuestsTab({
   setPeopleCount,
   requiredTableCount,
   availableTableIds,
+  selectedTableIds,
   availabilityLoading,
+  hold,
+  holdSecondsLeft,
+  holdLoading,
   error,
   goToNextTab,
 }) {
@@ -119,7 +143,20 @@ export function GuestsTab({
               Available table IDs:{" "}
               {availableTableIds.length ? availableTableIds.join(", ") : "none"}
             </p>
+            <p>
+              Selected table IDs:{" "}
+              {selectedTableIds?.length ? selectedTableIds.join(", ") : "none"}
+            </p>
           </>
+        )}
+
+        {hold?.holdId ? (
+          <p>
+            Hold active: <strong>{hold.holdId}</strong>
+            {typeof holdSecondsLeft === "number" ? ` (expires in ${holdSecondsLeft}s)` : ""}
+          </p>
+        ) : (
+          <p>{holdLoading ? "Holding tables..." : "No active hold yet."}</p>
         )}
 
         {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
@@ -128,7 +165,7 @@ export function GuestsTab({
         <button
           type="button"
           onClick={() => goToNextTab?.()}
-          disabled={availabilityLoading || !!error}
+          disabled={availabilityLoading || holdLoading || !!error || !hold?.holdId}
         >
           Next
         </button>
