@@ -26,6 +26,11 @@ export default function Reservation() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [holdLoading, setHoldLoading] = useState(false);
   const [error, setError] = useState("");
+  const [availableTableIds, setAvailableTableIds] = useState([]);
+  const [selectedTableIds, setSelectedTableIds] = useState([]);
+  const [hold, setHold] = useState(null); // { holdId, expiresAt }
+  const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
+  const autoHoldAttemptedKeyRef = useRef(null); // prevents repeated auto-hold for same inputs (per page load)
 
   const initStartTime = new Date();
   initStartTime.setHours(20, 0, 0, 0);
@@ -42,11 +47,7 @@ export default function Reservation() {
     partySize: 1,
   });
 
-  const [availableTableIds, setAvailableTableIds] = useState([]);
-  const [selectedTableIds, setSelectedTableIds] = useState([]);
-  const [hold, setHold] = useState(null); // { holdId, expiresAt }
-  const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
-  const autoHoldAttemptedKeyRef = useRef(null); // prevents repeated auto-hold for same inputs (per page load)
+
 
   const updateField = (field, value) => {
     setReservationInfo((prev) => ({
@@ -99,15 +100,11 @@ export default function Reservation() {
   const end_time = `${reservationDateStr} ${endTimeStr}:00`;
   const date = `${reservationDateStr} 00:00:00`;
 
-  // 1) Availability fetch whenever date/time/guests changes.
+  // Availability fetch whenever date/time/guests changes.
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      /**
-       * Step 1: ask backend which tables are available for the requested time window.
-       * We only need IDs, because selection is automatic (no manual picking).
-       */
       setError("");
       setAvailabilityLoading(true);
 
@@ -143,33 +140,10 @@ export default function Reservation() {
     return () => { cancelled = true; };
   }, [start_time, end_time, requiredTableCount, reservationInfo.partySize]);
 
-  // 4) Hold countdown UI
-  useEffect(() => {
-    if (!hold?.expiresAt) return;
-
-    const tick = () => {
-      const expiresMs = new Date(hold.expiresAt).getTime();
-      const nowMs = Date.now();
-      const seconds = Math.max(0, Math.floor((expiresMs - nowMs) / 1000));
-      setHoldSecondsLeft(seconds);
-      if (seconds === 0) {
-        clearHold();
-        setError("Hold expired. Please hold tables again.");
-      }
-    };
-
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hold?.expiresAt]);
-
-  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
-
   // Auto-hold when user reaches the Details tab.
   useEffect(() => {
     /**
-     * Step 2: create a temporary hold (server-side) so tables aren't booked
+      create a temporary hold (server-side) so tables aren't booked
      * by someone else while the user fills in the form.
      *
      * This is NOT a DB lock held open for minutes. It's a record with TTL.
@@ -226,6 +200,30 @@ export default function Reservation() {
     reservationInfo.partySize,
   ]);
 
+  // Hold countdown UI
+  useEffect(() => {
+    if (!hold?.expiresAt) return;
+
+    const tick = () => {
+      const expiresMs = new Date(hold.expiresAt).getTime();
+      const nowMs = Date.now();
+      const seconds = Math.max(0, Math.floor((expiresMs - nowMs) / 1000));
+      setHoldSecondsLeft(seconds);
+      if (seconds === 0) {
+        clearHold();
+        setError("Hold expired. Please hold tables again.");
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hold?.expiresAt]);
+
+  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
@@ -235,7 +233,7 @@ export default function Reservation() {
     }
 
     /**
-     * Step 3: final reservation create.
+     *  final reservation create.
      * Backend re-checks availability, so even if the hold failed/expired,
      * it will not silently create an invalid reservation.
      */
