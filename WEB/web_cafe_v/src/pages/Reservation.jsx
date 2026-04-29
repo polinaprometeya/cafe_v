@@ -26,6 +26,7 @@ export default function Reservation() {
    * - Keep Date/Time separate in UI state (Date objects)
    * - Convert to canonical datetime strings only at the API boundary
    */
+
   const [selectedHeaderTopic, setSelectedHeaderTopic] = useState("date");
   const [isLoading, setIsLoading] = useState(false);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
@@ -35,8 +36,8 @@ export default function Reservation() {
   const [selectedTableIds, setSelectedTableIds] = useState([]);
   const [hold, setHold] = useState(null); // { holdId, expiresAt }
   const [holdSecondsLeft, setHoldSecondsLeft] = useState(null);
-  const lastAvailabilityKeyRef = useRef(null);
-  const lastHoldKeyRef = useRef(null);
+  const availabilityRequestIdRef = useRef(0);
+  const lastHoldKeyRef = useRef(null); // prevents duplicate hold requests for same inputs
 
   const initStartTime = new Date();
   initStartTime.setHours(20, 0, 0, 0);
@@ -55,7 +56,7 @@ export default function Reservation() {
   });
 
 
-
+  //this updates fields runningly 
   const updateField = (field, value) => {
     setReservationInfo((prev) => ({
       ...prev,
@@ -63,6 +64,7 @@ export default function Reservation() {
     }));
   };
 
+  //calculate how many tables needed
   const requiredTableCount = useMemo(() => {
     // Simple rule:
     // 1-2 guests => 1 table, 3-4 => 2 tables, 5-6 => 3 tables, 7-8 => 4 tables
@@ -86,6 +88,73 @@ export default function Reservation() {
     }
   };
 
+  const normalizeTableIds = (rawIds) => {
+    const ids = (Array.isArray(rawIds) ? rawIds : [])
+      .map(Number)
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+    return ids;
+  };
+
+  const fetchAvailability = async ({ start_time, end_time, partySize, requiredTableCount }) => {
+    const requestId = ++availabilityRequestIdRef.current;
+    setError("");
+    setAvailabilityLoading(true);
+
+    try {
+      const res = await tableAvailability({ start_time, end_time });
+      if (availabilityRequestIdRef.current !== requestId) return; // stale response
+
+      const ids = normalizeTableIds(res?.available_table_ids);
+      setAvailableTableIds(ids);
+      setSelectedTableIds(ids.slice(0, requiredTableCount));
+
+      // New time => old hold is invalid.
+      await releaseHoldIfAny();
+      lastHoldKeyRef.current = null;
+
+      if (ids.length === 0) {
+        setError("No tables available for the selected time.");
+      } else if (ids.length < requiredTableCount) {
+        setError(`Not enough tables available for ${partySize} guest(s).`);
+      }
+    } catch {
+      setError("Failed to load available tables.");
+    } finally {
+      if (availabilityRequestIdRef.current === requestId) setAvailabilityLoading(false);
+    }
+  };
+
+  const createHold = async ({ start_time, end_time, partySize, tableIds }) => {
+    setError("");
+    setHoldLoading(true);
+    try {
+      const res = await holdReservation({
+        start_time,
+        end_time,
+        guests_amount: partySize,
+        table_ids: tableIds,
+        ttl_seconds: 300,
+      });
+
+      const holdId = res?.hold_id ?? null;
+      const expiresAt = res?.expires_at ?? null;
+      if (!holdId || !expiresAt) {
+        clearHold();
+        setError("Hold request succeeded, but response did not include hold_id/expires_at.");
+        return null;
+      }
+
+      setHold({ holdId, expiresAt });
+      return { holdId, expiresAt };
+    } catch {
+      setError("Could not hold tables. Please try again.");
+      return null;
+    } finally {
+      setHoldLoading(false);
+    }
+  };
+
   const setPeopleCount = (partySize) => {
     updateField("partySize", partySize);
     void releaseHoldIfAny();
@@ -98,7 +167,6 @@ export default function Reservation() {
     updateField("startTime", startTime);
     updateField("endTime", endTime);
     void releaseHoldIfAny();
-    lastAvailabilityKeyRef.current = null;
     lastHoldKeyRef.current = null;
   };
 
@@ -106,7 +174,6 @@ export default function Reservation() {
     if (date === undefined) return;
     updateField("reservationDate", date);
     void releaseHoldIfAny();
-    lastAvailabilityKeyRef.current = null;
     lastHoldKeyRef.current = null;
   };
 
@@ -127,67 +194,27 @@ export default function Reservation() {
   const end_time = `${reservationDateStr} ${endTimeStr}:00`;
   const date = `${reservationDateStr} 00:00:00`;
 
-  const availabilityKey = `${start_time}|${end_time}`;
-  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(
-    ","
-  )}`;
+  const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
 
-  // Availability fetch when date/time changes (and when tab is active).
+  /**
+   * STEP 1: load availability when user is on Date/Time tab.
+   * (You can also change this to load on "Next" only, but this matches your request.)
+   */
   useEffect(() => {
-    let cancelled = false;
+    if (selectedHeaderTopic !== "date") return;
+    void fetchAvailability({
+      start_time,
+      end_time,
+      partySize: reservationInfo.partySize,
+      requiredTableCount,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedHeaderTopic, start_time, end_time]);
 
-    (async () => {
-      const isRelevantTab =
-        selectedHeaderTopic === "date" ||
-        selectedHeaderTopic === "guests" ||
-        selectedHeaderTopic === "reservation";
-      if (!isRelevantTab) return;
-      if (lastAvailabilityKeyRef.current === availabilityKey) return;
-
-      setError("");
-      setAvailabilityLoading(true);
-
-      try {
-        const res = await tableAvailability({ start_time, end_time });
-        if (cancelled) return;
-
-        const rawIds = Array.isArray(res?.available_table_ids) ? res.available_table_ids : [];
-        const ids = rawIds
-          .map(Number)
-          .filter((n) => Number.isFinite(n))
-          .sort((a, b) => a - b);
-
-        lastAvailabilityKeyRef.current = availabilityKey;
-        setAvailableTableIds(ids);
-        setSelectedTableIds(ids.slice(0, requiredTableCount));
-
-        // Availability changed => the old hold (if any) is no longer valid.
-        clearHold();
-        lastHoldKeyRef.current = null;
-
-        if (ids.length === 0) {
-          setError("No tables available for the selected time.");
-        } else if (ids.length < requiredTableCount) {
-          setError(`Not enough tables available for ${reservationInfo.partySize} guest(s).`);
-        }
-      } catch {
-        if (!cancelled) setError("Failed to load available tables.");
-      } finally {
-        if (!cancelled) setAvailabilityLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [
-    selectedHeaderTopic,
-    availabilityKey,
-    start_time,
-    end_time,
-    requiredTableCount,
-    reservationInfo.partySize,
-  ]);
-
-  // Create / refresh hold on the Guests tab (and keep it for the Details tab).
+  /**
+   * STEP 2: on Guests tab, once we have "enough selected tables", create a hold.
+   * Hold is kept and displayed also on the Details tab.
+   */
   useEffect(() => {
     if (selectedHeaderTopic !== "guests") return;
     if (availabilityLoading || holdLoading) return;
@@ -195,38 +222,16 @@ export default function Reservation() {
     if (selectedTableIds.length !== requiredTableCount) return;
     if (error) return;
 
-    // No-op if we already created this specific hold.
-    if (lastHoldKeyRef.current === holdKey && hold?.holdId) return;
+    // No-op if we already attempted to create this hold for these exact inputs.
+    if (lastHoldKeyRef.current === holdKey) return;
+    lastHoldKeyRef.current = holdKey;
 
-    (async () => {
-      try {
-        setHoldLoading(true);
-        const res = await holdReservation({
-          start_time,
-          end_time,
-          guests_amount: reservationInfo.partySize,
-          table_ids: selectedTableIds,
-          ttl_seconds: 300,
-        });
-
-        const holdId = res?.hold_id ?? null;
-        const expiresAt = res?.expires_at ?? null;
-
-        if (!holdId || !expiresAt) {
-          clearHold();
-          // This usually means backend returned a different shape than expected.
-          setError("Hold request succeeded, but response did not include hold_id/expires_at.");
-          return;
-        }
-
-        setHold({ holdId, expiresAt });
-        lastHoldKeyRef.current = holdKey;
-      } catch {
-        setError("Could not hold tables. Please try again.");
-      } finally {
-        setHoldLoading(false);
-      }
-    })();
+    void createHold({
+      start_time,
+      end_time,
+      partySize: reservationInfo.partySize,
+      tableIds: selectedTableIds,
+    });
   }, [
     selectedHeaderTopic,
     availabilityLoading,
@@ -302,7 +307,15 @@ export default function Reservation() {
         setTime={setTime}
         availabilityLoading={availabilityLoading}
         error={error}
-        goToNextTab={() => setSelectedHeaderTopic("guests")}
+        goToNextTab={async () => {
+          await fetchAvailability({
+            start_time,
+            end_time,
+            partySize: reservationInfo.partySize,
+            requiredTableCount,
+          });
+          setSelectedHeaderTopic("guests");
+        }}
       />
     ),
     guests: (

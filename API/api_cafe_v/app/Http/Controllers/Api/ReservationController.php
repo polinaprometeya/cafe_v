@@ -123,9 +123,25 @@ class ReservationController extends Controller
         $rowArr = is_object($row) ? (array) $row : (is_array($row) ? $row : []);
         $rowArrLower = array_change_key_case($rowArr, CASE_LOWER);
 
-        $holdId = $rowArrLower['hold_id'] ?? null;  //can potentially add aliases "?? $rowArrLower['holdid']"
+        // Stored procedure implementations vary. Some return `hold_id`/`expires_at`,
+        // others may only return `id` (the created hold primary key).
+        $holdId = $rowArrLower['hold_id']
+            ?? $rowArrLower['holdid']
+            ?? $rowArrLower['id']
+            ?? $rowArrLower['v_hold_id']
+            ?? $rowArrLower['reservation_id']
+            ?? null;
 
-        $expiresAt = $rowArrLower['expires_at'] ?? null; //  ?? $rowArrLower['expiresat']
+        $expiresAt = $rowArrLower['expires_at']
+            ?? $rowArrLower['expiresat']
+            ?? $rowArrLower['expires']
+            ?? $rowArrLower['v_expires_at']
+            ?? null;
+
+        // If procedure didn't return expires_at, fetch it from DB using the hold id.
+        if ($holdId !== null && $expiresAt === null) {
+            $expiresAt = DB::table('reservation_holds')->where('id', $holdId)->value('expires_at');
+        }
 
         //error handling
         if ($holdId === null || $expiresAt === null) {
