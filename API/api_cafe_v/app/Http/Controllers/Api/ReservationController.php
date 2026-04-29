@@ -93,8 +93,9 @@ class ReservationController extends Controller
         $data = $request->validated();
 
         $tableIdsJson = json_encode($data['table_ids'], JSON_THROW_ON_ERROR);
-        $ttlSeconds = $data['ttl_seconds'] ?? 300;
+        $ttlSeconds = $data['ttl_seconds'] ?? 300; //Determine TTL (time-to-live), I do not actually have a default
 
+        //Call a stored procedure to create the hold
         try {
             $result = DB::select('CALL sp_create_hold(?, ?, ?, ?, ?)', [
                 $data['start_time'],
@@ -104,6 +105,7 @@ class ReservationController extends Controller
                 $ttlSeconds,
             ]);
         } catch (QueryException $e) {
+            //This happens if no table are available
             $msg = $e->getMessage();
 
             if (str_contains($msg, 'TABLES_NOT_AVAILABLE')) {
@@ -115,25 +117,16 @@ class ReservationController extends Controller
             throw $e;
         }
 
+        //Extract and normalize the stored procedure result row
         $row = $result[0] ?? null;
         $rowArr = is_object($row) ? (array) $row : (is_array($row) ? $row : []);
         $rowArrLower = array_change_key_case($rowArr, CASE_LOWER);
 
-        // Stored procedure should return: hold_id, expires_at
-        // it is easier to handle common alias/cases to avoid frontend confusion.
-        $holdId = $rowArrLower['hold_id']
-            ?? $rowArrLower['holdid']
-            ?? $rowArrLower['id']
-            ?? $rowArrLower['v_hold_id']
-            ?? $rowArrLower['reservation_id']
-            ?? null;
+        $holdId = $rowArrLower['hold_id'] ?? null;  //can potentially add aliases "?? $rowArrLower['holdid']"
 
-        $expiresAt = $rowArrLower['expires_at']
-            ?? $rowArrLower['expiresat']
-            ?? $rowArrLower['expires']
-            ?? $rowArrLower['v_expires_at']
-            ?? null;
+        $expiresAt = $rowArrLower['expires_at'] ?? null; //  ?? $rowArrLower['expiresat']
 
+        //error handling
         if ($holdId === null || $expiresAt === null) {
             return response()->json([
                 'message' => 'Hold was created, but API could not read hold_id/expires_at from stored procedure result.',
@@ -141,6 +134,7 @@ class ReservationController extends Controller
             ], 500);
         }
 
+        //success
         return response()->json([
             'hold_id' => $holdId,
             'expires_at' => $expiresAt,
