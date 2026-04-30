@@ -35,7 +35,7 @@ export function Tabs({ children, buttons, ButtonContainer = "menu" }) {
     }
   
     function MenuButtonsRow({ selectedTopic }) {
-      const menuButtons = ["Date", "Time", "Guests", "Reservation"];
+      const menuButtons = ["Date", "Time", "Guests", "Reservation", "Done"];
       const buttonsRow = menuButtons.map((item) => (
         <TabButton
           key={item}

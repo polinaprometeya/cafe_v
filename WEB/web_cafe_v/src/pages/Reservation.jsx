@@ -291,6 +291,7 @@ export default function Reservation() {
       clearHold();
       setReservationInfo(emptyReservationInfo);
       setIsLoading(false);
+      setSelectedHeaderTopic("done")
     }
   };
 
@@ -359,6 +360,10 @@ export default function Reservation() {
         }}
         actions={{ updateField, handleSubmit }}
         status={{ availabilityLoading, holdLoading, isLoading, error }}
+      />
+    ),
+    reservation: (
+      <ReservationComponents.DoneTab
       />
     ),
   };
