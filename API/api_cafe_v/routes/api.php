@@ -29,7 +29,8 @@ Route::post('logout', [AuthController::class, 'logout'])
 Route::post('reservation-holds', [ReservationController::class, 'hold']);
 Route::delete('reservation-holds/{hold}', [ReservationController::class, 'releaseHold']);
 
-Route::post('tables/availability', [TableController::class, 'availability']);
+Route::post('tables/availability', [TableController::class, 'availability'])
+    ->middleware('throttle:availability');
 
 
 

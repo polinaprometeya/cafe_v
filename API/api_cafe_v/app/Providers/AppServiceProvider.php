@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         }); //max 60 request in 1 minute - rate limiter
+
+        RateLimiter::for('availability', function (Request $request) {
+            return Limit::perMinute(240)->by($request->ip());
+        });
 
         // RateLimiter::for('reviews', function (Request $request) {
         //     return Limit::perHour(3)->by(optional($request->user())->id ?: $request->ip());

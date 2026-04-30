@@ -12,10 +12,15 @@ class TableController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show', ]);
-        //middleware here needs controller to extend base controller to work
-        $this->middleware('throttle:api')->only(['update','destroy']); //max 60 request in 1 minute - rate limiter is to prevent abuse
-        $this->authorizeResource(Table::class, 'table');
+        /**
+         * Auth model:
+         * - Customers (public) can check availability.
+         * - Staff (authenticated) can mutate tables (future).
+         */
+        $this->middleware('auth:sanctum')->only(['store', 'update', 'destroy']);
+
+        // Rate limit public availability checks too (prevents scraping/spam).
+        $this->middleware('throttle:api')->only([ 'store', 'update', 'destroy']);
     }
     /**
      * Display a listing of the resource.
@@ -87,12 +92,13 @@ class TableController extends Controller
                     ->where('end_time', '>', $start);
             })
             // Exclude tables that are currently held (unexpired holds) and overlap the requested window.
+            //      ->where('h.expires_at', '>', DB::raw('NOW()'))
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->select(DB::raw(1))
                     ->from('reservation_hold_tables as ht')
                     ->join('reservation_holds as h', 'h.id', '=', 'ht.hold_id')
                     ->whereColumn('ht.table_id', 'tables.id')
-                    ->where('h.expires_at', '>', DB::raw('NOW()'))
+                    ->where('h.expires_at', '>', now())
                     ->where('h.start_time', '<', $end)
                     ->where('h.end_time', '>', $start);
             })
