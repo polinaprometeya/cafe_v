@@ -19,6 +19,22 @@ use Illuminate\Support\Carbon;
 class ReservationController extends Controller
 {
     use CanLoadRelationships;
+    private array $relations = ['user'];
+
+    public function __construct()
+    {
+        /**
+         * Auth model:
+         * - Customers (public) can create reservations and holds.
+         * - Staff (authenticated) can list/update/delete reservations.
+         */
+        $this->middleware('auth:sanctum')->only(['index', 'show', 'update', 'destroy']);
+
+        // Rate limit both public booking endpoints and staff mutation endpoints.
+        $this->middleware('throttle:api')->only(['store', 'hold', 'releaseHold', 'update', 'destroy']);
+
+        //$this->middleware('throttle:60,1')->only(['store', 'update', 'destroy']); --> now it is configured in AppServiceProvider
+    }
 
     protected function relations(): array
     {

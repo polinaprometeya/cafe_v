@@ -10,26 +10,29 @@ use Illuminate\Http\Request;
 
 Route::apiResource('reservation', ReservationController::class);
 
+Route::apiResource('category', CategoryController::class);
+
+//this is a current user endpoint not a specific one
+//middleware('auth:sanctum') protects the route, you need authentication Bearer token in order to access this route
+//Route::middleware('auth:sanctum')->get('/user', function(Request $request){return $request->user();}); <--- laravel 11 , this is no more
+
+Route::get('/user', function (Request $request) {
+   return $request->user();
+})->middleware('auth:sanctum');
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])
+->middleware('auth:sanctum');
+
+
 //POST is commonly used for “search/filter” endpoints when the input is complex
 Route::post('reservation-holds', [ReservationController::class, 'hold']);
 Route::delete('reservation-holds/{hold}', [ReservationController::class, 'releaseHold']);
 
 Route::post('tables/availability', [TableController::class, 'availability']);
 
-Route::apiResource('category', CategoryController::class);
 
-// Route::apiResource('menu', MenuController::class);
 
-//this is a current user endpoint not a specific one
-//middleware('auth:sanctum') protects the route, you need authentication Bearer token in order to access this route
-//Route::middleware('auth:sanctum')->get('/user', function(Request $request){return $request->user();}); <--- laravel 11 , this is no more
-//Route::get('/user', function (Request $request) {
-//    return $request->user();
-//})->middleware('auth:sanctum');
-
-//Route::post('/login', [AuthController::class, 'login']);
-//Route::post('logout', [AuthController::class, 'logout'])
-//->middleware('auth:sanctum');
 
 //Route::apiResource('events.attendees', AttendeeController::class)
 //->scoped()->except('update');

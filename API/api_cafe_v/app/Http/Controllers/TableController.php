@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\DB;
 
 class TableController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['index', 'show', ]);
+        //middleware here needs controller to extend base controller to work
+        $this->middleware('throttle:api')->only(['update','destroy']); //max 60 request in 1 minute - rate limiter is to prevent abuse
+        $this->authorizeResource(Table::class, 'table');
+    }
     /**
      * Display a listing of the resource.
      */
