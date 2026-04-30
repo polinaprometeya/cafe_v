@@ -66,18 +66,16 @@ export function ReservationForm({
       </label>
 
       <button className="submit" type="submit" disabled={isDisabled}>
-        {isDisabled ? "Submitting..." : "Submit"}
+        {isDisabled ? "Submited" : "Submit"}
       </button>
     </form>
   );
 }
 
 export function DateTab({
-  reservationInfo,
-  setDate,
-  availabilityLoading,
-  error,
-  goToNextTab,
+  reservation,
+  status,
+  actions,
 }) {
   /**
    * Date + Time UI controls.
@@ -85,17 +83,20 @@ export function DateTab({
    */
   return (
     <>
-      <DateSelector selectedDate={reservationInfo.reservationDate} updateDate={setDate} />
+      <DateSelector
+        selectedDate={reservation.reservationInfo.reservationDate}
+        updateDate={actions.setDate}
+      />
       <div style={{ height: 12 }} />
 
-      {availabilityLoading ? <p>Loading available tables...</p> : null}
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      {status.availabilityLoading ? <p>Loading available tables...</p> : null}
+      {status.error ? <p style={{ color: "crimson" }}>{status.error}</p> : null}
 
       <div style={{ height: 12 }} />
       <button
         type="button"
-        onClick={() => goToNextTab?.()}
-        disabled={availabilityLoading || !!error}
+        onClick={() => actions.goToNextTab?.()}
+        disabled={status.availabilityLoading || !!status.error}
       >
         Next
       </button>
@@ -104,11 +105,9 @@ export function DateTab({
 }
 
 export function TimeTab({
-  reservationInfo,
-  setTime,
-  availabilityLoading,
-  error,
-  goToNextTab,
+  reservation,
+  status,
+  actions,
 }) {
   /**
    * Date + Time UI controls.
@@ -116,17 +115,20 @@ export function TimeTab({
    */
   return (
     <>
-      <TimeSelector selectedTime={reservationInfo.startTime} updateTime={setTime} />
+      <TimeSelector
+        selectedTime={reservation.reservationInfo.startTime}
+        updateTime={actions.setTime}
+      />
       <div style={{ height: 12 }} />
 
-      {availabilityLoading ? <p>Loading available tables...</p> : null}
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      {status.availabilityLoading ? <p>Loading available tables...</p> : null}
+      {status.error ? <p style={{ color: "crimson" }}>{status.error}</p> : null}
 
       <div style={{ height: 12 }} />
       <button
         type="button"
-        onClick={() => goToNextTab?.()}
-        disabled={availabilityLoading || !!error}
+        onClick={() => actions.goToNextTab?.()}
+        disabled={status.availabilityLoading || !!status.error}
       >
         Next
       </button>
@@ -135,17 +137,9 @@ export function TimeTab({
 }
 
 export function GuestsTab({
-  reservationInfo,
-  setPeopleCount,
-  requiredTableCount,
-  availableTableIds,
-  selectedTableIds,
-  availabilityLoading,
-  hold,
-  holdSecondsLeft,
-  holdLoading,
-  error,
-  goToNextTab,
+  reservation,
+  status,
+  actions,
 }) {
   /**
    * Guests tab:
@@ -155,45 +149,59 @@ export function GuestsTab({
    */
   return (
     <>
-      <ClampedCounter count={reservationInfo.partySize} updateCount={setPeopleCount} />
+      <ClampedCounter
+        count={reservation.reservationInfo.partySize}
+        updateCount={actions.setPeopleCount}
+      />
 
       <div style={{ height: 12 }} />
 
       <div>
         <p>
-          Tables needed: <strong>{requiredTableCount}</strong>
+          Tables needed: <strong>{reservation.requiredTableCount}</strong>
         </p>
-        {availabilityLoading ? (
+        {status.availabilityLoading ? (
           <p>Loading available tables...</p>
         ) : (
           <>
             <p>
               Available table IDs:{" "}
-              {availableTableIds.length ? availableTableIds.join(", ") : "none"}
+              {reservation.availableTableIds?.length
+                ? reservation.availableTableIds.join(", ")
+                : "none"}
             </p>
             <p>
               Selected table IDs:{" "}
-              {selectedTableIds?.length ? selectedTableIds.join(", ") : "none"}
+              {reservation.selectedTableIds?.length
+                ? reservation.selectedTableIds.join(", ")
+                : "none"}
             </p>
           </>
         )}
 
-        {hold?.holdId ? (
+        {reservation.hold?.holdId ? (
           <p>
-            Hold active: <strong>{hold.holdId}</strong>
-            {typeof holdSecondsLeft === "number" ? ` (expires in ${holdSecondsLeft}s)` : ""}
+            Hold active: <strong>{reservation.hold.holdId}</strong>
+            {typeof reservation.holdSecondsLeft === "number"
+              ? ` (expires in ${reservation.holdSecondsLeft}s)`
+              : ""}
           </p>
         ) : (
-          <p>{holdLoading ? "Holding tables..." : "No active hold yet."}</p>
+          <p>{status.holdLoading ? "Holding tables..." : "No active hold yet."}</p>
         )}
 
-        {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+        {status.error ? <p style={{ color: "crimson" }}>{status.error}</p> : null}
 
         <div style={{ height: 12 }} />
         <button
           type="button"
-          onClick={() => goToNextTab?.()}
-          disabled={availabilityLoading || holdLoading || !!error || !hold?.holdId}
+          onClick={() => actions.goToNextTab?.()}
+          disabled={
+            status.availabilityLoading ||
+            status.holdLoading ||
+            !!status.error ||
+            !reservation.hold?.holdId
+          }
         >
           Next
         </button>
@@ -202,7 +210,7 @@ export function GuestsTab({
   );
 }
 
-export function DetailsTab({ reservationInfo, updateField, handleSubmit, hold, holdSecondsLeft, requiredTableCount, selectedTableIds, availabilityLoading, holdLoading, error, isLoading }) {
+export function DetailsTab({ reservation, status, actions }) {
   /**
    * Details tab:
    * - shows selected table IDs (auto-picked)
@@ -214,25 +222,29 @@ export function DetailsTab({ reservationInfo, updateField, handleSubmit, hold, h
       <div style={{ marginBottom: 12 }}>
         <p>
           Selected table IDs:{" "}
-          {selectedTableIds.length ? selectedTableIds.join(", ") : "none"} (need{" "}
-          {requiredTableCount})
+          {reservation.selectedTableIds?.length
+            ? reservation.selectedTableIds.join(", ")
+            : "none"}{" "}
+          (need {reservation.requiredTableCount})
         </p>
-        {hold?.holdId ? (
+        {reservation.hold?.holdId ? (
           <p>
-            Hold active: <strong>{hold.holdId}</strong>
-            {typeof holdSecondsLeft === "number" ? ` (expires in ${holdSecondsLeft}s)` : ""}
+            Hold active: <strong>{reservation.hold.holdId}</strong>
+            {typeof reservation.holdSecondsLeft === "number"
+              ? ` (expires in ${reservation.holdSecondsLeft}s)`
+              : ""}
           </p>
         ) : (
-          <p>{holdLoading ? "Holding tables..." : "No active hold."}</p>
+          <p>{status.holdLoading ? "Holding tables..." : "No active hold."}</p>
         )}
-        {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+        {status.error ? <p style={{ color: "crimson" }}>{status.error}</p> : null}
       </div>
 
       <ReservationForm
-        reservationInfo={reservationInfo}
-        updateField={updateField}
-        onSubmit={handleSubmit}
-        isDisabled={isLoading || !hold?.holdId}
+        reservationInfo={reservation.reservationInfo}
+        updateField={actions.updateField}
+        onSubmit={actions.handleSubmit}
+        isDisabled={status.isLoading || !reservation.hold?.holdId}
       />
     </>
   );

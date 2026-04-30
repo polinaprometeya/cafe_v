@@ -296,68 +296,69 @@ export default function Reservation() {
 
   const tabs = {
     date: (
-      <ReservationComponents.DateTab 
-        reservationInfo={reservationInfo} 
-        setDate={setDate} 
-        setTime={setTime}
-        availabilityLoading={availabilityLoading}
-        error={error}
-        goToNextTab={async () => {
-          await fetchAvailability({
-            start_time,
-            end_time,
-            partySize: reservationInfo.partySize,
-            requiredTableCount,
-          });
-          setSelectedHeaderTopic("time");
+      <ReservationComponents.DateTab
+        reservation={{ reservationInfo }}
+        status={{ availabilityLoading, error }}
+        actions={{
+          setDate,
+          goToNextTab: async () => {
+            await fetchAvailability({
+              start_time,
+              end_time,
+              partySize: reservationInfo.partySize,
+              requiredTableCount,
+            });
+            setSelectedHeaderTopic("time");
+          },
         }}
       />
     ),
     time: (
-      <ReservationComponents.TimeTab 
-        reservationInfo={reservationInfo} 
-        setTime={setTime}
-        availabilityLoading={availabilityLoading}
-        error={error}
-        goToNextTab={async () => {
-          await fetchAvailability({
-            start_time,
-            end_time,
-            partySize: reservationInfo.partySize,
-            requiredTableCount,
-          });
-          setSelectedHeaderTopic("guests");
+      <ReservationComponents.TimeTab
+        reservation={{ reservationInfo }}
+        status={{ availabilityLoading, error }}
+        actions={{
+          setTime,
+          goToNextTab: async () => {
+            await fetchAvailability({
+              start_time,
+              end_time,
+              partySize: reservationInfo.partySize,
+              requiredTableCount,
+            });
+            setSelectedHeaderTopic("guests");
+          },
         }}
       />
     ),
     guests: (
       <ReservationComponents.GuestsTab 
-        reservationInfo={reservationInfo} 
-        setPeopleCount={setPeopleCount}
-        requiredTableCount={requiredTableCount}
-        availableTableIds={availableTableIds}
-        selectedTableIds={selectedTableIds}
-        availabilityLoading={availabilityLoading}
-        hold={hold}
-        holdSecondsLeft={holdSecondsLeft}
-        holdLoading={holdLoading}
-        error={error}
-        goToNextTab={() => setSelectedHeaderTopic("reservation")}
+        reservation={{
+          reservationInfo,
+          requiredTableCount,
+          availableTableIds,
+          selectedTableIds,
+          hold,
+          holdSecondsLeft,
+        }}
+        status={{ availabilityLoading, holdLoading, error }}
+        actions={{
+          setPeopleCount: setPeopleCount,
+          goToNextTab: () => setSelectedHeaderTopic("reservation"),
+        }}
       />
     ),
     reservation: (
       <ReservationComponents.DetailsTab
-        reservationInfo={reservationInfo}
-        updateField={updateField}
-        handleSubmit={handleSubmit}
-        hold={hold}
-        holdSecondsLeft={holdSecondsLeft}
-        requiredTableCount={requiredTableCount}
-        selectedTableIds={selectedTableIds}
-        availabilityLoading={availabilityLoading}
-        holdLoading={holdLoading}
-        error={error}
-        isLoading={isLoading}
+        reservation={{
+          reservationInfo,
+          requiredTableCount,
+          selectedTableIds,
+          hold,
+          holdSecondsLeft,
+        }}
+        actions={{ updateField, handleSubmit }}
+        status={{ availabilityLoading, holdLoading, isLoading, error }}
       />
     ),
   };
