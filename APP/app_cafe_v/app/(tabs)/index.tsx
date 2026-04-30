@@ -12,7 +12,7 @@ import {
   type MenuItem,
   type PaginatedCategoryResponse,
 } from "../../src/api/routes";
-import Table from "../components/table";
+import Table from "../features/table";
 import { useEffect, useState } from "react";
 
 export default function HomeScreen() {
