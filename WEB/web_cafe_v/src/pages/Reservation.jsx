@@ -309,9 +309,26 @@ export default function Reservation() {
 
   const tabs = {
     date: (
-      <ReservationComponents.DateTimeTab 
+      <ReservationComponents.DateTab 
         reservationInfo={reservationInfo} 
         setDate={setDate} 
+        setTime={setTime}
+        availabilityLoading={availabilityLoading}
+        error={error}
+        goToNextTab={async () => {
+          await fetchAvailability({
+            start_time,
+            end_time,
+            partySize: reservationInfo.partySize,
+            requiredTableCount,
+          });
+          setSelectedHeaderTopic("time");
+        }}
+      />
+    ),
+    time: (
+      <ReservationComponents.TimeTab 
+        reservationInfo={reservationInfo} 
         setTime={setTime}
         availabilityLoading={availabilityLoading}
         error={error}
@@ -361,7 +378,8 @@ export default function Reservation() {
   return (
     <main>
       <menu className="headerTabs" id="headerTabs">
-        <button onClick={() => setSelectedHeaderTopic("date")}>Date/Time</button>
+        <button onClick={() => setSelectedHeaderTopic("date")}>Date</button>
+        <button onClick={() => setSelectedHeaderTopic("time")}>Time</button>
         <button onClick={() => setSelectedHeaderTopic("guests")}>Guests</button>
         <button onClick={() => setSelectedHeaderTopic("reservation")}>Details</button>
       </menu>

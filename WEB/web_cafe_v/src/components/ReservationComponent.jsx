@@ -72,10 +72,9 @@ export function ReservationForm({
   );
 }
 
-export function DateTimeTab({
+export function DateTab({
   reservationInfo,
   setDate,
-  setTime,
   availabilityLoading,
   error,
   goToNextTab,
@@ -88,6 +87,35 @@ export function DateTimeTab({
     <>
       <DateSelector selectedDate={reservationInfo.reservationDate} updateDate={setDate} />
       <div style={{ height: 12 }} />
+
+      {availabilityLoading ? <p>Loading available tables...</p> : null}
+      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+
+      <div style={{ height: 12 }} />
+      <button
+        type="button"
+        onClick={() => goToNextTab?.()}
+        disabled={availabilityLoading || !!error}
+      >
+        Next
+      </button>
+    </>
+  );
+}
+
+export function TimeTab({
+  reservationInfo,
+  setTime,
+  availabilityLoading,
+  error,
+  goToNextTab,
+}) {
+  /**
+   * Date + Time UI controls.
+   * We keep the state as Date objects for UX, and compose server datetimes later.
+   */
+  return (
+    <>
       <TimeSelector selectedTime={reservationInfo.startTime} updateTime={setTime} />
       <div style={{ height: 12 }} />
 
