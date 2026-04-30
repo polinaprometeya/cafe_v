@@ -15,22 +15,15 @@ import * as ReservationComponents from "../components/ReservationComponent";
 import "./Page.css";
 
 export default function Reservation() {
-  /**
-   * Reservation page (frontend state machine)
-   *
-   * UX: user picks date/time -> picks guest amount -> enters details -> submits
-   *
-   * Backend contract (important):
-   * - `/tables/availability` expects canonical datetimes: { start_time, end_time }
-   *   and returns: { available_table_ids: number[] }
-   * - `/reservation-holds` expects: { start_time, end_time, guests_amount, table_ids, ttl_seconds? }
-   *   and returns: { hold_id, expires_at }
-   * - `/reservation` expects: { guests_amount, date, start_time, end_time, reservation_name, reservation_number, table_ids }
-   *
-   * Best practice used here:
-   * - Keep Date/Time separate in UI state (Date objects)
-   * - Convert to canonical datetime strings only at the API boundary
-   */
+  const emptyReservationInfo = () => ({
+    reservationDate: new Date(),
+    startTime: initStartTime,
+    endTime: initEndTime,
+    email: "",
+    reservee: "",
+    phoneNumber: "",
+    partySize: 1,
+  });
 
   const [selectedHeaderTopic, setSelectedHeaderTopic] = useState("date");
   const [isLoading, setIsLoading] = useState(false); //true while submitting final reservatio , kinda obsessive
@@ -51,15 +44,7 @@ export default function Reservation() {
 
   const ttlSecondsDefault = 300; //5 min , max 900seconds
   //create an empty reservation - form data
-  const [reservationInfo, setReservationInfo] = useState({
-    reservationDate: new Date(),
-    startTime: initStartTime,
-    endTime: initEndTime,
-    email: "",
-    reservee: "",
-    phoneNumber: "",
-    partySize: 1,
-  });
+  const [reservationInfo, setReservationInfo] = useState(emptyReservationInfo);
 
 
   //this updates fields runningly , gices possability to update one at the time
@@ -303,6 +288,8 @@ export default function Reservation() {
       setIsLoading(true);
       await createReservation(payload);
     } finally {
+      clearHold();
+      setReservationInfo(emptyReservationInfo);
       setIsLoading(false);
     }
   };
