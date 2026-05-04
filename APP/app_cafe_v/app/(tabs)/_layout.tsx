@@ -3,7 +3,6 @@ import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -33,6 +32,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
         }}
       />
+
+      <Tabs.Screen
+        name="login"
+        options={{
+          title: 'login',
+          tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
+        }}
+      />
+      
     </Tabs>
   );
 }
