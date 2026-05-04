@@ -62,6 +62,18 @@ export default function Reservation() {
     return Math.ceil(reservationInfo.partySize / 2);
   }, [reservationInfo.partySize]);
 
+//Keep the first N available tables selected whenever party size (requiredTableCount)
+// or the availability list changes. 
+
+  useEffect(() => {
+    if (availableTableIds.length === 0) {
+      setSelectedTableIds([]);
+      return;
+    }
+    const take = Math.min(requiredTableCount, availableTableIds.length);
+    setSelectedTableIds(availableTableIds.slice(0, take));
+  }, [availableTableIds, requiredTableCount]);
+
   //Hold helpers
   const clearHold = () => {
     setHold(null);
@@ -93,7 +105,6 @@ export default function Reservation() {
       //normalizeTableIds cleans IDs
       const ids = normalizeTableIds(res?.available_table_ids);
       setAvailableTableIds(ids);
-      setSelectedTableIds(ids.slice(0, requiredTableCount)); //requiredTableCount --> how many tables I need
 
       // New time => old hold is invalid.
       await releaseHoldIfAny();
