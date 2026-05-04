@@ -250,21 +250,17 @@ export function DetailsTab({ reservation, status, actions }) {
   );
 }
 
-export function DoneTab({ }) {
-  /**
-   * Details tab:
-   * - shows selected table IDs (auto-picked)
-   * - shows hold state (auto-created when entering this tab)
-   * - enables submit only when hold exists
-   */
+export function DoneTab({ actions }) {
   return (
     <>
       <div style={{ marginBottom: 12 }}>
-
-      <p>Thank you for reserving with us</p>
+        <p>Thank you for reserving with us</p>
       </div>
-
-
+      {actions?.startOver ? (
+        <button type="button" onClick={actions.startOver}>
+          New reservation
+        </button>
+      ) : null}
     </>
   );
 }

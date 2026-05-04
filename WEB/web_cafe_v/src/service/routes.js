@@ -30,6 +30,8 @@ export const holdReservation = async (payload) => {
 export const releaseReservationHold = async (holdId) => {
     return api.apiRequest(`/reservation-holds/${holdId}`, {
         method: 'DELETE',
+        // Hold may already be expired, cleaned up, or never persisted; goal is “released”.
+        treat404AsSuccess: true,
     });
 }
 

@@ -200,11 +200,11 @@ export default function Reservation() {
   const holdKey = `${start_time}|${end_time}|${reservationInfo.partySize}|${selectedTableIds.join(",")}`;
 
   /**
-   * STEP 1: load availability when user is on Date/Time tab.
-   * (You can also change this to load on "Next" only, but this matches your request.)
+   * Availability is time-based only on the API. Refetch when the slot changes — not when
+   * party size changes — so we do not run release-after-fetch on every guest count bump
+   * (that produced noisy DELETEs and 404s).
    */
   useEffect(() => {
-    if (selectedHeaderTopic !== "date") return;
     void fetchAvailability({
       start_time,
       end_time,
@@ -212,7 +212,28 @@ export default function Reservation() {
       requiredTableCount,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedHeaderTopic, start_time, end_time]);
+  }, [start_time, end_time]);
+
+  /** Re-evaluate “not enough tables” when party changes without a new availability request. */
+  useEffect(() => {
+    if (availabilityLoading) return;
+    if (availableTableIds.length === 0) return;
+
+    if (availableTableIds.length < requiredTableCount) {
+      setError(
+        `Not enough tables available for ${reservationInfo.partySize} guest(s).`
+      );
+    } else {
+      setError((prev) =>
+        prev.includes("Not enough tables available") ? "" : prev
+      );
+    }
+  }, [
+    availableTableIds,
+    requiredTableCount,
+    reservationInfo.partySize,
+    availabilityLoading,
+  ]);
 
   /**
    * STEP 2: on Guests tab, once we have "enough selected tables", create a hold.
@@ -297,12 +318,15 @@ export default function Reservation() {
 
     try {
       setIsLoading(true);
+      setError("");
       await createReservation(payload);
-    } finally {
       clearHold();
-      setReservationInfo(emptyReservationInfo);
+      setReservationInfo(emptyReservationInfo());
+      setSelectedHeaderTopic("done");
+    } catch {
+      setError("Could not complete reservation. Please try again.");
+    } finally {
       setIsLoading(false);
-      setSelectedHeaderTopic("done")
     }
   };
 
@@ -313,15 +337,7 @@ export default function Reservation() {
         status={{ availabilityLoading, error }}
         actions={{
           setDate,
-          goToNextTab: async () => {
-            await fetchAvailability({
-              start_time,
-              end_time,
-              partySize: reservationInfo.partySize,
-              requiredTableCount,
-            });
-            setSelectedHeaderTopic("time");
-          },
+          goToNextTab: () => setSelectedHeaderTopic("time"),
         }}
       />
     ),
@@ -331,15 +347,7 @@ export default function Reservation() {
         status={{ availabilityLoading, error }}
         actions={{
           setTime,
-          goToNextTab: async () => {
-            await fetchAvailability({
-              start_time,
-              end_time,
-              partySize: reservationInfo.partySize,
-              requiredTableCount,
-            });
-            setSelectedHeaderTopic("guests");
-          },
+          goToNextTab: () => setSelectedHeaderTopic("guests"),
         }}
       />
     ),
@@ -373,8 +381,9 @@ export default function Reservation() {
         status={{ availabilityLoading, holdLoading, isLoading, error }}
       />
     ),
-    reservation: (
+    done: (
       <ReservationComponents.DoneTab
+        actions={{ startOver: () => setSelectedHeaderTopic("date") }}
       />
     ),
   };

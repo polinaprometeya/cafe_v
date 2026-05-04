@@ -11,14 +11,15 @@ const API_BASE_URL = "http://127.0.0.1:8000/api"
  *   You can remove the log once you're done debugging.
  */
 async function apiRequest(endpoint, options = {}) {
+    const { treat404AsSuccess = false, ...fetchOptions } = options;
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
         mode: 'cors',
         headers: {
             'Content-Type': 'application/json',
-            ...options.headers,
+            ...fetchOptions.headers,
         },
-        ...options,
+        ...fetchOptions,
     };
 
     if (config.body && typeof config.body === 'object') {
@@ -35,6 +36,9 @@ async function apiRequest(endpoint, options = {}) {
         }
 
         if (!response.ok) {
+            if (treat404AsSuccess && response.status === 404) {
+                return null;
+            }
             // Try to extract a useful error body for debugging (Laravel often returns JSON).
             const contentType = response.headers.get("content-type");
             let body = null;
