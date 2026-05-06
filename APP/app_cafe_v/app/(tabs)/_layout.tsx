@@ -34,9 +34,9 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="login"
+        name="AuthProvider"
         options={{
-          title: 'login',
+          title: 'Login',
           tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
         }}
       />

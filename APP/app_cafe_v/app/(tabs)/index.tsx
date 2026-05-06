@@ -14,12 +14,24 @@ import {
 } from "../../src/api/routes";
 import Table from "../features/table";
 import { useEffect, useState } from "react";
+import { Button } from '@/components/ui/button';
+import { useAuthSession } from './AuthProvider';
 
 export default function HomeScreen() {
   const [foodCategory, setFoodCategory] = useState<Category["menu"]>([]);
   const [drinkCategory, setDrinkCategory] = useState<Category["menu"]>([]);
   const [starterCategory, setStarterCategory] = useState<Category["menu"]>([]);
   const [dessertCategory, setDessertCategory] = useState<Category["menu"]>([]);
+  const {signOut, token} = useAuthSession()
+  const [tokenInUi, setTokenInUi] = useState<null|string|undefined>(null)
+
+  const logout = () => {
+     signOut();
+  }
+
+  const callApi = () => {
+    setTokenInUi(token?.current);
+  }
 
   useEffect(() => {
       getMenuByCategory().then((response: PaginatedCategoryResponse) => {
@@ -81,6 +93,28 @@ export default function HomeScreen() {
         {renderCategoryTable("Dessert", dessertCategory)}
   
       </ThemedView>
+
+      <ThemedView
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
+        backgroundColor: '#FFFFFF'
+      }}
+    >
+      <ThemedText>Home</ThemedText>
+      <Button title={"Logout"} onPress={logout}/>
+      <ThemedView style={{
+        paddingTop: 20
+      }} />
+      <ThemedText>Make an API call with the stored AUTH token</ThemedText>
+      <Button title={"Call API"} onPress={callApi} />
+      {tokenInUi &&
+        <ThemedText>{`Your API access token is ${tokenInUi}`}</ThemedText>
+      }
+    </ThemedView>
 
     </ParallaxScrollView>
   );

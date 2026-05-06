@@ -17,7 +17,8 @@ async function apiRequest(endpoint, options = {}) {
         mode: 'cors',
         headers: {
             'Content-Type': 'application/json',
-            ...fetchOptions.headers,
+            ...Object.fromEntries(new Headers(fetchOptions.headers || {}).entries()),
+            ...authHeaders(token),
         },
         ...fetchOptions,
     };
