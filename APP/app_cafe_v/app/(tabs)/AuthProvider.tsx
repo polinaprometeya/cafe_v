@@ -3,12 +3,12 @@ import { ThemedView } from '@/components/themed-view';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {router} from "expo-router";
-import {createContext, MutableRefObject, ReactNode, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import {createContext, ReactNode, RefObject, useCallback, useContext, useEffect, useRef, useState} from 'react';
 
 const AuthContext = createContext<{
   signIn: (arg0: string) => void;
   signOut: () => void
-  token: MutableRefObject<string | null> | null;
+  token: RefObject<string | null> | null;
   isLoading: boolean
 }>({
   signIn: () => null,

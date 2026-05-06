@@ -1,19 +1,21 @@
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
-export type ApiRequestOptions = RequestInit & {
+export type ApiRequestOptions = Omit<RequestInit, "headers" | "body"> & {
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
 };
 
 export async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const { body, headers, ...rest } = options;
   const config: RequestInit = {
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers ?? {}),
+      ...(headers ?? {}),
     },
-    ...options,
+    ...rest,
+    body: body as any,
   };
 
   if (
