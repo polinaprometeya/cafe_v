@@ -1,5 +1,5 @@
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
-import { FlatList, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import React from "react";
 
 type MenuItemLike = {
@@ -89,11 +89,11 @@ const Table = ({
       ]}
     >
       <Header />
-      <FlatList
-        data={normalizedBody}
-        renderItem={({ item }) => <Row data={item.items ?? []} />}
-        keyExtractor={(item, index) => String(item?.id ?? index)}
-      />
+      <View>
+        {normalizedBody.map((item, index) => (
+          <Row key={String(item?.id ?? index)} data={item.items ?? []} />
+        ))}
+      </View>
     </View>
   );
 

@@ -1,4 +1,11 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+import { Platform } from "react-native";
+
+const DEFAULT_API_BASE_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:8000/api" // Android emulator -> host machine
+    : "http://127.0.0.1:8000/api"; // iOS simulator -> host machine
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 export type ApiRequestOptions = Omit<RequestInit, "headers" | "body"> & {
   headers?: Record<string, string>;
@@ -26,7 +33,17 @@ export async function apiRequest(endpoint: string, options: ApiRequestOptions = 
     (config as any).body = JSON.stringify((config as any).body);
   }
 
-  const response = await fetch(url, config);
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } catch (err) {
+    // This is the case you’re seeing: "Network request failed" (no HTTP response at all).
+    throw new Error(
+      `Network request failed for ${url}. ` +
+        `If you are on a device/emulator, check the backend host/port and that it is running. ` +
+        `Original error: ${String(err)}`
+    );
+  }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");

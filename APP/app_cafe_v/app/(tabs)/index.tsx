@@ -15,7 +15,7 @@ import {
 import Table from "../features/table";
 import { useEffect, useState } from "react";
 import { Button } from '@/components/ui/button';
-import { useAuthSession } from './AuthProvider';
+import { useAuthSession } from '@/src/auth/AuthProvider';
 
 export default function HomeScreen() {
   const [foodCategory, setFoodCategory] = useState<Category["menu"]>([]);
