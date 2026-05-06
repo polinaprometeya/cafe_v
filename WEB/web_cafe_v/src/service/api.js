@@ -1,6 +1,11 @@
 
 const API_BASE_URL = "http://127.0.0.1:8000/api"
 
+function authHeaders(token) {
+    const t = token ?? localStorage.getItem('token');
+    return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
 /**
  * Low-level fetch wrapper used by `src/service/routes.js`.
  *
@@ -11,7 +16,7 @@ const API_BASE_URL = "http://127.0.0.1:8000/api"
  *   You can remove the log once you're done debugging.
  */
 async function apiRequest(endpoint, options = {}) {
-    const { treat404AsSuccess = false, ...fetchOptions } = options;
+    const { treat404AsSuccess = false, token, ...fetchOptions } = options;
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
         mode: 'cors',
