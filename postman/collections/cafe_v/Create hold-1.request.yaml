@@ -1,9 +1,10 @@
 $kind: http-request
-name: create hold
-url: " http://127.0.0.1:8000/api/reservation-holds "
+name: Create hold
+url: http://127.0.0.1:8000/api/reservation-holds
 method: POST
 headers:
-  Accept: application/json
+  - key: Accept
+    value: application/json
 body:
   type: json
   content: |-
@@ -14,4 +15,7 @@ body:
       "table_ids": [1, 2],
       "ttl_seconds": 300
     }
+auth:
+  credentials: []
+  type: bearer
 order: 3972612153964195
