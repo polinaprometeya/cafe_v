@@ -26,13 +26,6 @@ export default function HomeScreen() {
   const {signOut, token} = useAuthSession()
   const [tokenInUi, setTokenInUi] = useState<null|string|undefined>(null)
 
-  const logout = () => {
-     signOut();
-  }
-
-  const callApi = () => {
-    setTokenInUi(token?.current);
-  }
 
   useEffect(() => {
     let isMounted = true;
@@ -114,27 +107,6 @@ export default function HomeScreen() {
   
       </ThemedView>
 
-      {/* <ThemedView
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flex: 1,
-        backgroundColor: '#FFFFFF'
-      }}
-    >
-      <ThemedText>Home</ThemedText>
-      <Button title={"Logout"} onPress={logout}/>
-      <ThemedView style={{
-        paddingTop: 20
-      }} />
-      <ThemedText>Make an API call with the stored AUTH token</ThemedText>
-      <Button title={"Call API"} onPress={callApi} />
-      {tokenInUi &&
-        <ThemedText>{`Your API access token is ${tokenInUi}`}</ThemedText>
-      }
-    </ThemedView> */}
 
     </ParallaxScrollView>
   );
