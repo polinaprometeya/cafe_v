@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const [drinkCategory, setDrinkCategory] = useState<Category["menu"]>([]);
   const [starterCategory, setStarterCategory] = useState<Category["menu"]>([]);
   const [dessertCategory, setDessertCategory] = useState<Category["menu"]>([]);
+  const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
   const {signOut, token} = useAuthSession()
   const [tokenInUi, setTokenInUi] = useState<null|string|undefined>(null)
 
@@ -34,17 +35,31 @@ export default function HomeScreen() {
   }
 
   useEffect(() => {
-      getMenuByCategory().then((response: PaginatedCategoryResponse) => {
-          const categories: Category[] = response?.data ?? [];
+    let isMounted = true;
 
-          const getMenu = (type: Category["type"]) =>
-              (categories.find((c: Category) => c?.type === type)?.menu ?? []);
+    (async () => {
+      try {
+        setMenuLoadError(null);
+        const response: PaginatedCategoryResponse = await getMenuByCategory();
+        const categories: Category[] = response?.data ?? [];
 
-          setFoodCategory(getMenu("Food"));
-          setDrinkCategory(getMenu("Drink"));
-          setStarterCategory(getMenu("Starter"));
-          setDessertCategory(getMenu("Dessert"));
-      });
+        const getMenu = (type: Category["type"]) =>
+          (categories.find((c: Category) => c?.type === type)?.menu ?? []);
+
+        if (!isMounted) return;
+        setFoodCategory(getMenu("Food"));
+        setDrinkCategory(getMenu("Drink"));
+        setStarterCategory(getMenu("Starter"));
+        setDessertCategory(getMenu("Dessert"));
+      } catch (err) {
+        if (!isMounted) return;
+        setMenuLoadError(err instanceof Error ? err.message : String(err));
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const tableHeaderData = ["Number", "Name", "Description", "Price"]
@@ -85,6 +100,11 @@ export default function HomeScreen() {
  
       </ThemedView>
       <ThemedView>
+        {menuLoadError ? (
+          <ThemedText style={{ marginBottom: 12, color: '#b91c1c' }}>
+            {menuLoadError}
+          </ThemedText>
+        ) : null}
         {/* <Table style={styles.table} tableData={foodCategory} /> */}
         {/* <Table  tableData={foodCategory} /> */}
         {renderCategoryTable("Food", foodCategory)}

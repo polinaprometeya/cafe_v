@@ -1,9 +1,29 @@
 import { Platform } from "react-native";
 
-const DEFAULT_API_BASE_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:8000/api" // Android emulator -> host machine
-    : "http://127.0.0.1:8000/api"; // iOS simulator -> host machine
+function getDefaultApiBaseUrl() {
+  // Web: follow whatever host served the app (localhost or your LAN IP).
+  // This avoids hardcoding a changing LAN IP during dev.
+  if (Platform.OS === "web") {
+    const hostname =
+      typeof globalThis !== "undefined" &&
+      "location" in globalThis &&
+      globalThis.location &&
+      typeof globalThis.location.hostname === "string" &&
+      globalThis.location.hostname.length > 0
+        ? globalThis.location.hostname
+        : "localhost";
+
+    return `http://${hostname}:8000/api`;
+  }
+
+  // Android emulator -> host machine
+  if (Platform.OS === "android") return "http://10.0.2.2:8000/api";
+
+  // iOS simulator -> host machine
+  return "http://127.0.0.1:8000/api";
+}
+
+const DEFAULT_API_BASE_URL = getDefaultApiBaseUrl();
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
