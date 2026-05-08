@@ -41,10 +41,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="logout"
         options={{
-          title: 'logout',
-          tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
+          title: 'Logout',
+          tabBarIcon: ({ color , size }) => <AntDesign name="logout" size={size ?? 24} color={color} />,
         }}
-      /> 
+      />
     </Tabs>
   );
 }
