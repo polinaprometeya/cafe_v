@@ -17,6 +17,13 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
+        name="login"
+        options={{
+          title: 'Login',
+          tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Menu',
@@ -31,16 +38,7 @@ export default function TabLayout() {
           title: 'Reservation',
           tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
         }}
-      />
-
-      <Tabs.Screen
-        name="login"
-        options={{
-          title: 'Login',
-          tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,
-        }}
-      />
-      
+      /> 
     </Tabs>
   );
 }

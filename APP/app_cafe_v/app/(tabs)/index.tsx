@@ -114,7 +114,7 @@ export default function HomeScreen() {
   
       </ThemedView>
 
-      <ThemedView
+      {/* <ThemedView
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -134,7 +134,7 @@ export default function HomeScreen() {
       {tokenInUi &&
         <ThemedText>{`Your API access token is ${tokenInUi}`}</ThemedText>
       }
-    </ThemedView>
+    </ThemedView> */}
 
     </ParallaxScrollView>
   );
