@@ -43,15 +43,16 @@ export function Button({
           ? Colors.light.text
           : Colors.dark.text;
 
+  const styleSpecification: NonNullable<PressableProps['style']> = (state) => {
+    const userStyle = typeof style === 'function' ? style(state) : style;
+    return [containerStyle, state.pressed && !disabled ? styles.pressed : undefined, userStyle];
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
-      style={({ pressed }) => [
-        containerStyle,
-        pressed && !disabled ? styles.pressed : undefined,
-        style,
-      ]}
+      style={styleSpecification}
       {...rest}>
       {children ?? <ThemedText style={{ color: textColor, fontWeight: '600' }}>{title}</ThemedText>}
     </Pressable>
