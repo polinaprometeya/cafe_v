@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthSession } from '@/src/auth/AuthProvider';
 import { router } from 'expo-router';
 
-export default function HomeScreen() {
+export default function LogoutScreen() {
 
   const {signOut, token} = useAuthSession()
   const [tokenInUi, setTokenInUi] = useState<null|string|undefined>(null)

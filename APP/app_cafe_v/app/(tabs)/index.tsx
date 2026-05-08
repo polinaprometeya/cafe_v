@@ -17,15 +17,12 @@ import { useEffect, useState } from "react";
 import { Button } from '@/components/ui/button';
 import { useAuthSession } from '@/src/auth/AuthProvider';
 
-export default function HomeScreen() {
+export default function MenuScreen() {
   const [foodCategory, setFoodCategory] = useState<Category["menu"]>([]);
   const [drinkCategory, setDrinkCategory] = useState<Category["menu"]>([]);
   const [starterCategory, setStarterCategory] = useState<Category["menu"]>([]);
   const [dessertCategory, setDessertCategory] = useState<Category["menu"]>([]);
   const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
-  const {signOut, token} = useAuthSession()
-  const [tokenInUi, setTokenInUi] = useState<null|string|undefined>(null)
-
 
   useEffect(() => {
     let isMounted = true;
