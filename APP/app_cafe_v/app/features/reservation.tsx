@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { StyleSheet } from 'react-native';
 import { View,Text, useWindowDimensions } from 'react-native';
 // import { TabView, SceneMap } from 'react-native-tab-view';
 
@@ -29,8 +30,8 @@ export default function App() {
 
   return (
     <View>
-        <Text>Date {now.toDateString()} </Text>
-        <Text>Time {now.toLocaleTimeString()}</Text>
+        <Text style={styles.subtitle}>Date {now.toDateString()} </Text>
+        <Text style={styles.subtitle}>Time {now.toLocaleTimeString()}</Text>
     </View>
     // <TabView
     //   navigationState={{ index, routes }}
@@ -38,5 +39,33 @@ export default function App() {
     //   onIndexChange={setIndex}
     //   initialLayout={{ width: layout.width }}
     // />
-  );
+  ); 
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 720,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  header: {
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 28,
+    lineHeight: 34,
+  },
+  subtitle: {
+    marginBottom: 16,
+    fontSize: 16,
+    opacity: 0.8,
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+});
+
