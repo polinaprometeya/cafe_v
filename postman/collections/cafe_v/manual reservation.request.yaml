@@ -1,0 +1,7 @@
+$kind: http-request
+name: manual reservation
+url: http://127.0.0.1:8000/api/tables/manual-selection
+method: POST
+headers:
+  Accept: application/json
+order: 4205856317067191

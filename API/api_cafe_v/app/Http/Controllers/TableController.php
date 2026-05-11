@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TableAvailabilityRequest;
 use App\Models\Table;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -85,14 +86,51 @@ class TableController extends Controller
         $start = $data['start_time'];
         $end = $data['end_time'];
 
-        $availableTableIds = Table::query()
+        $availableTableIds = $this->getAvailableTableIds($start, $end);
+
+        return response()->json([
+            'available_table_ids' => $availableTableIds,
+        ]);
+    }
+
+    public function manualSelection(TableAvailabilityRequest $request)
+    {
+        $data = $request->validated();
+
+        $start = $data['start_time'];
+        $end = $data['end_time'];
+        $availableTableIds = $this->getAvailableTableIds($start, $end);
+
+        $tables = Table::query()
+            ->with('neighbors')
+            ->orderBy('number')
+            ->get()
+            ->map(function (Table $table) use ($availableTableIds) {
+                return [
+                    'id' => $table->id,
+                    'number' => $table->number,
+                    'seats' => $table->seats,
+                    'is_available' => $availableTableIds->contains($table->id),
+                    'neighbor_table_ids' => $table->neighbors->pluck('id')->values(),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'tables' => $tables,
+            'available_table_ids' => $availableTableIds,
+        ]);
+    }
+
+    private function getAvailableTableIds(string $start, string $end): Collection
+    {
+        return Table::query()
             ->whereDoesntHave('reservations', function ($q) use ($start, $end) {
                 // overlap condition: existing.start < requested.end AND existing.end > requested.start
                 $q->where('start_time', '<', $end)
                     ->where('end_time', '>', $start);
             })
             // Exclude tables that are currently held (unexpired holds) and overlap the requested window.
-            //      ->where('h.expires_at', '>', DB::raw('NOW()'))
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->select(DB::raw(1))
                     ->from('reservation_hold_tables as ht')
@@ -104,10 +142,6 @@ class TableController extends Controller
             })
             ->pluck('id')
             ->values();
-
-        return response()->json([
-            'available_table_ids' => $availableTableIds,
-        ]);
     }
 
 }

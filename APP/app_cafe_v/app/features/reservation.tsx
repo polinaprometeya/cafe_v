@@ -33,6 +33,7 @@ export default function App() {
         <Text style={styles.subtitle}>Date {now.toDateString()} </Text>
         <Text style={styles.subtitle}>Time {now.toLocaleTimeString()}</Text>
     </View>
+    
     // <TabView
     //   navigationState={{ index, routes }}
     //   renderScene={renderScene}
