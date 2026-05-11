@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View,Text, useWindowDimensions } from 'react-native';
 // import { TabView, SceneMap } from 'react-native-tab-view';
 
+const now = new Date();
 
 // const renderScene = SceneMap({
 //     music: MusicRoute,
@@ -28,8 +29,8 @@ export default function App() {
 
   return (
     <View>
-        <Text>Date</Text>
-        <Text>Time</Text>
+        <Text>Date {now.toDateString()} </Text>
+        <Text>Time {now.toLocaleTimeString()}</Text>
     </View>
     // <TabView
     //   navigationState={{ index, routes }}
