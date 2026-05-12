@@ -32,7 +32,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="menu"
+        name="reservation"
         options={{
           title: 'Reservation',
           tabBarIcon: ({ color , size }) => <AntDesign name="book" size={size ?? 24} color={color} />,

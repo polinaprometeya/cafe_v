@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Fonts } from '@/constants/theme';
-import Reservtion from '../features/reservation';
+import ReservationScreen from '../features/reservation';
 
 export default function ReservationTabScreen() {
   return (
@@ -15,7 +15,7 @@ export default function ReservationTabScreen() {
       </ThemedView>
       <ThemedText style={styles.subtitle}>Create your reservation</ThemedText>
       <ThemedView style={styles.content}>
-        <Reservtion />
+        <ReservationScreen />
       </ThemedView>
     </ThemedView>
   );
