@@ -1,128 +1,143 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuthSession } from '@/src/auth/AuthProvider';
-import {
-  createReservation,
-  getManualTableSelection,
-  type ManualTableSelectionResponse,
-  type SelectableTable,
-} from '../../src/api/routes';
+import { createReservation, getManualTableSelection, type SelectableTable } from '../../src/api/routes';
+
+const RESERVATION_LENGTH_HOURS = 2;
+const DEFAULT_GUESTS = 2;
+const MAX_GUESTS = 8;
+
+function padNumber(value: number) {
+  return String(value).padStart(2, '0');
+}
 
 function formatApiDateTime(date: Date) {
-  const pad = (value: number) => String(value).padStart(2, '0');
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+  return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())} ${padNumber(
     date.getHours()
-  )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  )}:${padNumber(date.getMinutes())}:${padNumber(date.getSeconds())}`;
 }
 
 function formatApiDate(date: Date) {
-  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`;
+}
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+function createTimeWindow() {
+  const start = new Date();
+  const end = new Date(start.getTime() + RESERVATION_LENGTH_HOURS * 60 * 60 * 1000);
+
+  return { start, end };
+}
+
+async function fetchTablesForWindow(token: string, start: Date, end: Date) {
+  const response = await getManualTableSelection(
+    {
+      start_time: formatApiDateTime(start),
+      end_time: formatApiDateTime(end),
+      guests_amount: DEFAULT_GUESTS,
+    },
+    token
+  );
+
+  return response.tables ?? [];
+}
+
+function keepOnlyStillAvailableSelections(tables: SelectableTable[], selectedIds: number[]) {
+  const availableIds = tables
+    .filter((table) => table.is_available)
+    .map((table) => Number(table.id));
+
+  return selectedIds.filter((id) => availableIds.includes(id));
+}
+
+function calculateGuestCount(selectedTables: SelectableTable[]) {
+  const totalSeats = selectedTables.reduce((total, table) => total + table.seats, 0);
+
+  if (totalSeats < 1) return 1;
+  return Math.min(totalSeats, MAX_GUESTS);
 }
 
 export default function ReservationScreen() {
   const { token, isLoading } = useAuthSession();
-  const [tables, setTables] = useState<ManualTableSelectionResponse['tables']>([]);
+
+  const [tables, setTables] = useState<SelectableTable[]>([]);
   const [selectedTableIds, setSelectedTableIds] = useState<number[]>([]);
   const [tableLoadError, setTableLoadError] = useState<string | null>(null);
-  const [isFetchingTables, setIsFetchingTables] = useState(false);
-  const [reservationMessage, setReservationMessage] = useState<string | null>(null);
   const [reservationError, setReservationError] = useState<string | null>(null);
+  const [reservationMessage, setReservationMessage] = useState<string | null>(null);
+  const [isFetchingTables, setIsFetchingTables] = useState(false);
   const [isSubmittingReservation, setIsSubmittingReservation] = useState(false);
+  const [timeWindow] = useState(createTimeWindow);
 
-  const requestWindow = useMemo(() => {
-    const start = new Date();
-    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-
-    return { start, end };
-  }, []);
+  const availableTables = tables.filter((table) => table.is_available);
+  const unavailableTables = tables.filter((table) => !table.is_available);
+  const selectedTables = availableTables.filter((table) => selectedTableIds.includes(Number(table.id)));
+  const guestCount = calculateGuestCount(selectedTables);
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
 
-    if (isLoading) {
-      return () => {
-        isMounted = false;
-      };
-    }
+    async function loadTables() {
+      if (isLoading) return;
 
-    if (!token?.current) {
-      setTables([]);
-      setTableLoadError('Sign in to view table availability.');
-      return () => {
-        isMounted = false;
-      };
-    }
+      if (!token?.current) {
+        if (!active) return;
+        setTables([]);
+        setSelectedTableIds([]);
+        setTableLoadError('Sign in to view table availability.');
+        return;
+      }
 
-    (async () => {
       try {
         setIsFetchingTables(true);
         setTableLoadError(null);
 
-        const response = await getManualTableSelection(
-          {
-            start_time: formatApiDateTime(requestWindow.start),
-            end_time: formatApiDateTime(requestWindow.end),
-            guests_amount: 2,
-          },
-          token.current
-        );
+        const nextTables = await fetchTablesForWindow(token.current, timeWindow.start, timeWindow.end);
 
-        if (!isMounted) return;
-        setTables(response.tables ?? []);
-      } catch (err) {
-        if (!isMounted) return;
-        setTableLoadError(err instanceof Error ? err.message : String(err));
+        if (!active) return;
+
+        setTables(nextTables);
+
+        // If a table becomes unavailable after refetching, remove it from the selected list.
+        setSelectedTableIds((current) => keepOnlyStillAvailableSelections(nextTables, current));
+      } catch (error) {
+        if (!active) return;
+        setTableLoadError(error instanceof Error ? error.message : String(error));
       } finally {
-        if (isMounted) {
+        if (active) {
           setIsFetchingTables(false);
         }
       }
-    })();
+    }
+
+    loadTables();
 
     return () => {
-      isMounted = false;
+      active = false;
     };
-  }, [isLoading, requestWindow, token]);
+  }, [isLoading, timeWindow, token]);
 
-  useEffect(() => {
-    const availableTableIds = new Set(
-      tables.filter((table) => table.is_available).map((table) => Number(table.id))
-    );
-
-    setSelectedTableIds((current) => current.filter((id) => availableTableIds.has(id)));
-  }, [tables]);
-
-  const availableTables = useMemo(() => tables.filter((table) => table.is_available), [tables]);
-  const unavailableTables = useMemo(() => tables.filter((table) => !table.is_available), [tables]);
-  const selectedTables = useMemo(
-    () => availableTables.filter((table) => selectedTableIds.includes(Number(table.id))),
-    [availableTables, selectedTableIds]
-  );
-  const derivedGuestsAmount = useMemo(() => {
-    const totalSeats = selectedTables.reduce((sum, table) => sum + table.seats, 0);
-
-    return Math.min(Math.max(totalSeats || 1, 1), 8);
-  }, [selectedTables]);
-
-  const toggleTableSelection = (table: SelectableTable) => {
+  function handleTablePress(table: SelectableTable) {
     if (!table.is_available) return;
 
     const tableId = Number(table.id);
+
     setReservationError(null);
     setReservationMessage(null);
-    setSelectedTableIds((current) =>
-      current.includes(tableId) ? current.filter((id) => id !== tableId) : [...current, tableId]
-    );
-  };
 
-  const reserveSelectedTables = async () => {
+    setSelectedTableIds((current) => {
+      if (current.includes(tableId)) {
+        return current.filter((id) => id !== tableId);
+      }
+
+      return [...current, tableId];
+    });
+  }
+
+  async function handleReservePress() {
     if (selectedTableIds.length === 0) {
       setReservationError('Select at least one available table.');
       return;
@@ -134,89 +149,89 @@ export default function ReservationScreen() {
       setReservationMessage(null);
 
       await createReservation({
-        guests_amount: derivedGuestsAmount,
-        date: formatApiDate(requestWindow.start),
-        start_time: formatApiDateTime(requestWindow.start),
-        end_time: formatApiDateTime(requestWindow.end),
+        guests_amount: guestCount,
+        date: formatApiDate(timeWindow.start),
+        start_time: formatApiDateTime(timeWindow.start),
+        end_time: formatApiDateTime(timeWindow.end),
         reservation_name: 'Walk-in reservation',
         reservation_number: 'N/A',
         table_ids: selectedTableIds,
       });
 
-      setReservationMessage(`Reserved ${selectedTableIds.length} table(s) for the current time slot.`);
       setSelectedTableIds([]);
+      setReservationMessage(`Reserved ${selectedTableIds.length} table(s) for the current time slot.`);
 
       if (token?.current) {
-        const refreshed = await getManualTableSelection(
-          {
-            start_time: formatApiDateTime(requestWindow.start),
-            end_time: formatApiDateTime(requestWindow.end),
-            guests_amount: 2,
-          },
-          token.current
-        );
-
-        setTables(refreshed.tables ?? []);
+        const nextTables = await fetchTablesForWindow(token.current, timeWindow.start, timeWindow.end);
+        setTables(nextTables);
       }
-    } catch (err) {
-      setReservationError(err instanceof Error ? err.message : String(err));
+    } catch (error) {
+      setReservationError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsSubmittingReservation(false);
     }
-  };
+  }
 
-  const renderTableSection = (
+  function renderTableSection(
     title: string,
-    data: SelectableTable[],
-    cardColor: string,
+    sectionTables: SelectableTable[],
+    backgroundColor: string,
     emptyMessage: string
-  ) => (
-    <ThemedView key={title} style={styles.section}>
-      <ThemedText type="subtitle" style={styles.sectionTitle}>
-        {title}
-      </ThemedText>
+  ) {
+    return (
+      <ThemedView key={title} style={styles.section}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          {title}
+        </ThemedText>
 
-      {data.length === 0 ? (
-        <ThemedText style={styles.emptyText}>{emptyMessage}</ThemedText>
-      ) : (
-        data.map((table) => (
-          <TouchableOpacity
-            key={String(table.id)}
-            activeOpacity={table.is_available ? 0.8 : 1}
-            disabled={!table.is_available}
-            onPress={() => toggleTableSelection(table)}
-            style={[
-              styles.tableCard,
-              { backgroundColor: cardColor },
-              selectedTableIds.includes(Number(table.id)) ? styles.selectedTableCard : null,
-              !table.is_available ? styles.disabledTableCard : null,
-            ]}>
-            <ThemedText type="defaultSemiBold" lightColor="#ffffff" darkColor="#ffffff">
-              Table {table.number}
-            </ThemedText>
-            <ThemedText lightColor="#ffffff" darkColor="#ffffff">Seats: {table.seats}</ThemedText>
-            <ThemedText lightColor="#ffffff" darkColor="#ffffff">
-              Status: {table.is_available ? 'Tap to select' : 'Unavailable'}
-            </ThemedText>
-            {selectedTableIds.includes(Number(table.id)) ? (
-              <ThemedText type="defaultSemiBold" lightColor="#ffffff" darkColor="#ffffff">
-                Selected
-              </ThemedText>
-            ) : null}
-          </TouchableOpacity>
-        ))
-      )}
-    </ThemedView>
-  );
+        {sectionTables.length === 0 ? (
+          <ThemedText style={styles.emptyText}>{emptyMessage}</ThemedText>
+        ) : (
+          sectionTables.map((table) => {
+            const isSelected = selectedTableIds.includes(Number(table.id));
+
+            return (
+              <TouchableOpacity
+                key={String(table.id)}
+                activeOpacity={table.is_available ? 0.8 : 1}
+                disabled={!table.is_available}
+                onPress={() => handleTablePress(table)}
+                style={[
+                  styles.tableCard,
+                  { backgroundColor },
+                  isSelected ? styles.selectedTableCard : null,
+                  !table.is_available ? styles.disabledTableCard : null,
+                ]}>
+                <ThemedText type="defaultSemiBold" lightColor="#ffffff" darkColor="#ffffff">
+                  Table {table.number}
+                </ThemedText>
+                <ThemedText lightColor="#ffffff" darkColor="#ffffff">Seats: {table.seats}</ThemedText>
+                <ThemedText lightColor="#ffffff" darkColor="#ffffff">
+                  {table.is_available ? 'Tap to select' : 'Unavailable'}
+                </ThemedText>
+                {isSelected ? (
+                  <ThemedText type="defaultSemiBold" lightColor="#ffffff" darkColor="#ffffff">
+                    Selected
+                  </ThemedText>
+                ) : null}
+              </TouchableOpacity>
+            );
+          })
+        )}
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.title}>
         Table Availability
       </ThemedText>
-      <ThemedText style={styles.subtitle}>Date {requestWindow.start.toDateString()}</ThemedText>
-      <ThemedText style={styles.subtitle}>Time {requestWindow.start.toLocaleTimeString()}</ThemedText>
-      <ThemedText style={styles.caption}>Showing availability for the next 2 hours.</ThemedText>
+      <ThemedText style={styles.subtitle}>Date {timeWindow.start.toDateString()}</ThemedText>
+      <ThemedText style={styles.subtitle}>Time {timeWindow.start.toLocaleTimeString()}</ThemedText>
+      <ThemedText style={styles.caption}>
+        Showing availability for the next {RESERVATION_LENGTH_HOURS} hours.
+      </ThemedText>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {isLoading || isFetchingTables ? <ActivityIndicator style={styles.loader} /> : null}
@@ -230,7 +245,7 @@ export default function ReservationScreen() {
               {selectedTables.map((table) => `Table ${table.number}`).join(', ')}
             </ThemedText>
             <ThemedText style={styles.selectionSummary}>
-              Using current date/time with guest count {derivedGuestsAmount}.
+              Using current date/time with guest count {guestCount}.
             </ThemedText>
           </ThemedView>
         ) : null}
@@ -255,24 +270,23 @@ export default function ReservationScreen() {
 
         {!tableLoadError ? (
           <>
-          {renderTableSection('Available Tables', availableTables, '#16a34a', 'No tables are available.')}
-          {renderTableSection(
-            'Unavailable Tables',
-            unavailableTables,
-            '#dc2626',
-            'There are no unavailable tables right now.'
-          )}
+            {renderTableSection('Available Tables', availableTables, '#16a34a', 'No tables are available.')}
+            {renderTableSection(
+              'Unavailable Tables',
+              unavailableTables,
+              '#dc2626',
+              'There are no unavailable tables right now.'
+            )}
           </>
         ) : null}
 
         <Button
           title={isSubmittingReservation ? 'Reserving...' : 'Reserve Selected Tables'}
           disabled={selectedTableIds.length === 0 || isSubmittingReservation || !!tableLoadError}
-          onPress={reserveSelectedTables}
+          onPress={handleReservePress}
           style={styles.reserveButton}
         />
       </ScrollView>
-
     </ThemedView>
   );
 }
@@ -309,10 +323,10 @@ const styles = StyleSheet.create({
   successText: {
     marginBottom: 16,
   },
-  section: {
+  selectedSection: {
     marginBottom: 20,
   },
-  selectedSection: {
+  section: {
     marginBottom: 20,
   },
   sectionTitle: {
