@@ -24,7 +24,7 @@ export type LoginRequest = {
   password: string;
 };
 
-// Shape depends on your Laravel response; keep it flexible and strongly type the token.
+// Shape depends on Laravel response;
 export type LoginResponse = {
   token?: string;
   access_token?: string;

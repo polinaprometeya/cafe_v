@@ -14,19 +14,26 @@ export default function ReservationTabScreen() {
         </ThemedText>
       </ThemedView>
       <ThemedText style={styles.subtitle}>Create your reservation</ThemedText>
-      <Reservtion />
+      <ThemedView style={styles.content}>
+        <Reservtion />
+      </ThemedView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     alignSelf: 'center',
     width: '100%',
     maxWidth: 720,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
+  },
+  content: {
+    flex: 1,
+    width: '100%',
   },
   header: {
     marginBottom: 8,
