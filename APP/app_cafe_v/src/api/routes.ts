@@ -50,6 +50,27 @@ export type ManualTableSelectionResponse = {
   available_table_ids: Array<number | string>;
 };
 
+export type CreateReservationRequest = {
+  guests_amount: number;
+  date: string;
+  start_time: string;
+  end_time: string;
+  reservation_name: string;
+  reservation_number: string;
+  table_ids: number[];
+};
+
+export type ReservationResponse = {
+  id: number;
+  guests_amount: number;
+  date: string;
+  start_time: string;
+  end_time: string;
+  reservation_name: string;
+  reservation_number: string;
+  table: unknown[];
+};
+
 
 export const login = (body: LoginRequest): Promise<LoginResponse> =>
   apiRequest("/login", { method: "POST", body });
@@ -70,6 +91,12 @@ export const getManualTableSelection = (
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
-  export const getMenuByCategory = (): Promise<PaginatedCategoryResponse> =>
-    apiRequest("/category");
+export const createReservation = (body: CreateReservationRequest): Promise<ReservationResponse> =>
+  apiRequest("/reservation", {
+    method: "POST",
+    body,
+  });
+
+export const getMenuByCategory = (): Promise<PaginatedCategoryResponse> =>
+  apiRequest("/category");
 
