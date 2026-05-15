@@ -32,7 +32,7 @@ function createTimeWindow() {
   return { start, end };
 }
 
-async function fetchTablesForWindow(token: string, start: Date, end: Date) {
+async function fetchTablesForTimeWindow(token: string, start: Date, end: Date) {
   const response = await getManualTableSelection(
     {
       start_time: formatApiDateTime(start),
@@ -95,7 +95,7 @@ export default function ReservationScreen() {
         setIsFetchingTables(true);
         setTableLoadError(null);
 
-        const nextTables = await fetchTablesForWindow(token.current, timeWindow.start, timeWindow.end);
+        const nextTables = await fetchTablesForTimeWindow(token.current, timeWindow.start, timeWindow.end);
 
         if (!active) return;
 
@@ -162,7 +162,7 @@ export default function ReservationScreen() {
       setReservationMessage(`Reserved ${selectedTableIds.length} table(s) for the current time slot.`);
 
       if (token?.current) {
-        const nextTables = await fetchTablesForWindow(token.current, timeWindow.start, timeWindow.end);
+        const nextTables = await fetchTablesForTimeWindow(token.current, timeWindow.start, timeWindow.end);
         setTables(nextTables);
       }
     } catch (error) {
