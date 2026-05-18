@@ -16,7 +16,7 @@ class ManualTableSelectionTest extends TestCase
 
     public function test_authenticated_staff_can_fetch_tables_for_manual_selection(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs(User::factory()->create()); //fake login
 
         $table1 = Table::factory()->create([
             'number' => 1,
@@ -40,7 +40,7 @@ class ManualTableSelectionTest extends TestCase
             'start_time' => '2026-05-11 18:00:00',
             'end_time' => '2026-05-11 20:00:00',
         ]);
-        $reservation->tables()->syncWithoutDetaching([$table2->id]);
+        $reservation->tables()->syncWithoutDetaching([$table2->id]); // fake reservation link to table 2
 
         $holdId = DB::table('reservation_holds')->insertGetId([
             'start_time' => '2026-05-11 18:30:00',
@@ -74,6 +74,7 @@ class ManualTableSelectionTest extends TestCase
         $response->assertJsonPath('tables.0.is_available', true);
         $response->assertJsonPath('tables.0.neighbor_table_ids', [$table2->id]);
 
+        //table 2 & 3 should be unavailble
         $response->assertJsonPath('tables.1.id', $table2->id);
         $response->assertJsonPath('tables.1.number', 2);
         $response->assertJsonPath('tables.1.seats', 4);
