@@ -13,7 +13,7 @@ class ReservationResource extends JsonResource
      * @return array<string, mixed>
      */
 
-    //this class is in no way tied to Event model or controller and therefore we would need to write those classes explicitly
+    
     public function toArray(Request $request): array
     {
         return

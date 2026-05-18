@@ -28,10 +28,13 @@ graph LR
 | Plan item | In codebase | Notes |
 |-----------|----------------|-------|
 | MySQL migrations | [`API/api_cafe_v/database/migrations/`](API/api_cafe_v/database/migrations/) | Includes `users`, `categories`, `menu`, `reservations`, café `table` graph, reservation holds, jobs/cache (framework). |
+
 | Eloquent models | [`API/api_cafe_v/app/Models/User.php`](API/api_cafe_v/app/Models/User.php), [`Category.php`](API/api_cafe_v/app/Models/Category.php), [`MenuItem.php`](API/api_cafe_v/app/Models/MenuItem.php), [`Table.php`](API/api_cafe_v/app/Models/Table.php), [`Reservation.php`](API/api_cafe_v/app/Models/Reservation.php) | Five first-class models; pivot-style tables exist in migrations without dedicated models where not needed. |
+
 | Seeders + Faker | [`API/api_cafe_v/database/seeders/`](API/api_cafe_v/database/seeders/), [`API/api_cafe_v/database/factories/`](API/api_cafe_v/database/factories/) | `DatabaseSeeder`, category/menu/table/reservation seeders; `MenuItemFactory`, `MenuFactory`, etc. |
 | ≥ 20 entities in domain | — | **Gap:** schema is café-focused but not expanded to the full 20+ entity list from the plan (no `Order`, `Supplier`, `Invoice`, …). |
-| MongoDB + performance comparison | — | **Gap:** no app-level MongoDB integration or benchmark doc in-repo (only transitive `mongodb` mentions in [`API/api_cafe_v/composer.lock`](API/api_cafe_v/composer.lock) via dependencies). |
+
+| MongoDB + performance comparison | — | **Gap:** no app-level MongoDB integration or benchmark doc in-repo |
 
 ---
 
@@ -39,12 +42,18 @@ graph LR
 
 | Plan item | In codebase | Notes |
 |-----------|----------------|-------|
-| API routes | [`API/api_cafe_v/routes/api.php`](API/api_cafe_v/routes/api.php) | `reservation`, `category`, auth, reservation holds, table availability / manual selection. |
+| API routes | [`API/api_cafe_v/routes/api.php`](API/api_cafe_v/routes/api.php) | `reservation`, `category`, auth, reservation holds, table availability , manual selection. |
+
 | REST controllers | [`API/api_cafe_v/app/Http/Controllers/Api/CategoryController.php`](API/api_cafe_v/app/Http/Controllers/Api/CategoryController.php), [`ReservationController.php`](API/api_cafe_v/app/Http/Controllers/Api/ReservationController.php), [`AuthController.php`](API/api_cafe_v/app/Http/Controllers/Api/AuthController.php), [`MenuController.php`](API/api_cafe_v/app/Http/Controllers/Api/MenuController.php), [`TableController.php`](API/api_cafe_v/app/Http/Controllers/Api/TableController.php) | Menu logic exists; **no `Route::apiResource` (or similar) for menu** is registered in `api.php` yet—SPA loads menu via [`/category`](WEB/web_cafe_v/src/service/routes.js) with nested items. |
+
 | API resources (transformers) | [`API/api_cafe_v/app/Http/Resources/`](API/api_cafe_v/app/Http/Resources/) | e.g. `CategoryResource`, `MenuResource`, `ReservationResource`. |
+
 | Sanctum token auth | [`API/api_cafe_v/routes/api.php`](API/api_cafe_v/routes/api.php) (`/login`, `/logout`, `auth:sanctum` routes), [`AuthController.php`](API/api_cafe_v/app/Http/Controllers/Api/AuthController.php), [`User` model tokens](API/api_cafe_v/app/Models/User.php) | Token-based API login/logout pattern. |
+
 | Repository pattern + DI | — | **Gap:** no `app/Repositories` layer or explicit repository bindings (controllers talk to Eloquent directly). |
+
 | Background jobs (e.g. email) | [`API/api_cafe_v/database/migrations/0001_01_01_000002_create_jobs_table.php`](API/api_cafe_v/database/migrations/0001_01_01_000002_create_jobs_table.php) | Jobs **table** exists; **no domain `app/Jobs`** for café workflows in-repo. |
+
 | Full CRUD for Products / Orders / Reservations / Users | Partial | **Categories + reservations:** CRUD-style API resources. **Orders / full user CRUD / standalone products API:** not present as in the plan table. |
 
 ---
@@ -54,9 +63,13 @@ graph LR
 | Plan item | In codebase | Notes |
 |-----------|----------------|-------|
 | Password hashing (bcrypt) | Laravel defaults + Fortify flows | Web stack uses Fortify; see [`API/api_cafe_v/config/fortify.php`](API/api_cafe_v/config/fortify.php), actions under [`API/api_cafe_v/app/Actions/Fortify/`](API/api_cafe_v/app/Actions/Fortify/). |
+
 | Input validation | Form requests / controller validation | e.g. [`CategoryRequest.php`](API/api_cafe_v/app/Http/Requests/CategoryRequest.php), validation in [`AuthController.php`](API/api_cafe_v/app/Http/Controllers/Api/AuthController.php). |
-| Rate limiting | [`API/api_cafe_v/routes/api.php`](API/api_cafe_v/routes/api.php) | `throttle:availability` on table endpoints. |
+
+| Rate limiting | It is defined in AppServiceProvider.pphp  |  [`API/api_cafe_v/routes/api.php`](API/api_cafe_v/routes/api.php) | `throttle:availability` on table endpoints. |
+
 | CORS for browser / Expo web | [`API/api_cafe_v/config/cors.php`](API/api_cafe_v/config/cors.php) | Documents localhost ports for CRA, Vite-style, Metro/Expo. |
+
 | API middleware stack | [`API/api_cafe_v/bootstrap/app.php`](API/api_cafe_v/bootstrap/app.php) | `HandleCors` on `api`. |
 | XSS headers / RBAC Gates-Policies / OWASP docs / ZAP | — | **Gap:** no dedicated security middleware doc, policies, or committed ZAP report in this repo. [`AppServiceProvider.php`](API/api_cafe_v/app/Providers/AppServiceProvider.php) contains commented Gate examples only. |
 
@@ -81,7 +94,9 @@ graph LR
 |-----------|----------------|-------|
 | Expo Router app | [`APP/app_cafe_v/app/`](APP/app_cafe_v/app/) | `_layout.tsx`, tabs, `login.tsx`, reservation tab, etc. |
 | API client | [`APP/app_cafe_v/src/api/api.ts`](APP/app_cafe_v/src/api/api.ts), [`APP/app_cafe_v/src/api/routes.ts`](APP/app_cafe_v/src/api/routes.ts), [`APP/app_cafe_v/src/service/apiFetch.ts`](APP/app_cafe_v/src/service/apiFetch.ts) | Fetch helpers aligned with Laravel API. |
+
 | Auth + token persistence | [`APP/app_cafe_v/src/auth/AuthProvider.tsx`](APP/app_cafe_v/src/auth/AuthProvider.tsx), [`APP/app_cafe_v/src/service/tokenStorage.ts`](APP/app_cafe_v/src/service/tokenStorage.ts) | AsyncStorage (with web fallback); **plan asked for SecureStore**—not wired via `expo-secure-store` in [`APP/app_cafe_v/package.json`](APP/app_cafe_v/package.json). |
+
 | Reservation UI | [`APP/app_cafe_v/app/features/reservation.tsx`](APP/app_cafe_v/app/features/reservation.tsx), [`APP/app_cafe_v/app/(tabs)/reservation.tsx`](APP/app_cafe_v/app/(tabs)/reservation.tsx) | Feature + tab screen. |
 
 ---
@@ -91,7 +106,9 @@ graph LR
 | Plan item | In codebase | Notes |
 |-----------|----------------|-------|
 | PHPUnit / Laravel feature tests | [`API/api_cafe_v/tests/`](API/api_cafe_v/tests/) | Auth, settings, dashboard, [`ManualTableSelectionTest.php`](API/api_cafe_v/tests/Feature/ManualTableSelectionTest.php), etc. |
+
 | React Testing Library | [`WEB/web_cafe_v/src/App.test.js`](WEB/web_cafe_v/src/App.test.js), [`WEB/web_cafe_v/src/setupTests.js`](WEB/web_cafe_v/src/setupTests.js) | CRA test harness. |
+
 | Cypress / Playwright / k6 / JMeter | — | **Gap:** not present in repo. |
 | Load-test / final OWASP reports | — | **Gap:** no committed reports. |
 

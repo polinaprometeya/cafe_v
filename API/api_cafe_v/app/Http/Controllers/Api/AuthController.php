@@ -24,9 +24,10 @@ class AuthController extends Controller
 
         /** @var \App\Models\User $user */
         $user = $request->user();
-
+        //if you add when this toekn is created so there is a timestamp
         $token = $user->createToken('api-token')->plainTextToken;
-
+        //you can add experation time here
+        //'expires_at' => $accessToken->accessToken->expires_at,
         return response()->json([
             'token' => $token,
             'user' => $user,
