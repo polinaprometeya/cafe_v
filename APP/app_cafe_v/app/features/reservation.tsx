@@ -7,10 +7,11 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuthSession } from '@/src/auth/AuthProvider';
 import { createReservation, getManualTableSelection, type SelectableTable } from '../../src/api/routes';
 
-const RESERVATION_LENGTH_HOURS = 2;
+const RESERVATION_LENGTH_HOURS = 2; //2 hours window, maybe chnage it to something else
 const DEFAULT_GUESTS = 2;
-const MAX_GUESTS = 8;
+const MAX_GUESTS = 8; //I feel like there should me max guests
 
+//a formatter-- so pad is what you add to current string-- The string to pad the current string with
 function padNumber(value: number) {
   return String(value).padStart(2, '0');
 }

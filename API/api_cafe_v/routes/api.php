@@ -30,7 +30,7 @@ Route::post('reservation-holds', [ReservationController::class, 'hold']);
 Route::delete('reservation-holds/{hold}', [ReservationController::class, 'releaseHold']);
 
 Route::post('tables/availability', [TableController::class, 'availability'])
-    ->middleware('throttle:availability');
+    ->middleware('throttle:availability'); 
 
 Route::post('tables/manual-selection', [TableController::class, 'manualSelection'])
     ->middleware(['auth:sanctum', 'throttle:availability']);
