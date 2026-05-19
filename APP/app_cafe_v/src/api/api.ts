@@ -1,8 +1,23 @@
+import Constants from "expo-constants";
 import { Platform } from "react-native";
+
+/** Mac/PC IP from Expo Metro (e.g. 192.168.1.5:8081) — same machine as Laravel in dev. */
+function getExpoDevMachineHost(): string | null {
+  const debuggerHost =
+    Constants.expoGoConfig?.debuggerHost ??
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ??
+    Constants.expoConfig?.hostUri;
+
+  if (!debuggerHost || typeof debuggerHost !== "string") return null;
+
+  const host = debuggerHost.split(":")[0]?.trim();
+  if (!host || host === "localhost" || host === "127.0.0.1") return null;
+
+  return host;
+}
 
 function getDefaultApiBaseUrl() {
   // Web: follow whatever host served the app (localhost or your LAN IP).
-  // This avoids hardcoding a changing LAN IP during dev.
   if (Platform.OS === "web") {
     const hostname =
       typeof globalThis !== "undefined" &&
@@ -19,7 +34,11 @@ function getDefaultApiBaseUrl() {
   // Android emulator -> host machine
   if (Platform.OS === "android") return "http://10.0.2.2:8000/api";
 
-  // iOS simulator -> host machine
+  // Physical iPhone: 127.0.0.1 is the phone, not your Mac — use Metro's host IP.
+  const devHost = getExpoDevMachineHost();
+  if (devHost) return `http://${devHost}:8000/api`;
+
+  // iOS simulator (or fallback)
   return "http://127.0.0.1:8000/api";
 }
 
